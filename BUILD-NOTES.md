@@ -2,10 +2,16 @@
 
 These preliminary instructions may be incomplete. Do not assume they work.
 
-##Install some basic requirements:
+## Install some basic requirements:
 
 ```shell
 sudo apt-get install virtualenv virtualenvwrapper python3-pip python3-dev
+```
+
+## Install postgres and some associated requirements:
+
+```shell
+sudo apt-get postgresql pgadmin3 postgresql-server-dev-9.3
 ```
 
 ## Install some dependencies for textract:
