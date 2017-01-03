@@ -111,3 +111,14 @@ class BcnlpExtractEntity:
         freq_of_word = self.doc.count(word)
         print("Freq of the word {} is {}".format(word, freq_of_word))
 
+    '''
+
+    def bnExtractDocSimilarity(self, doc1, doc2, similarity):
+        """Measure the semantic similarity between two documents using 
+           Word Movers Distance. Uses Textacy API 
+           textacy.similarity.word_movers(doc1, doc2, metric=u'cosine')
+        """
+        s = textacy.similarity.word_movers(self.doc1, self.doc2, 
+
+
+    '''
