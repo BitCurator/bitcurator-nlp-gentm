@@ -26,7 +26,12 @@ import sys
 #Base = declarative_base()
 #bcnlp_db = create_engine("postgres://localhost/bcnlp_db")
 
+db_index = dict()
+db_list = []
+dbinfo_array = ["db_name", "con", "meta"]
+#global con, meta
 def dbinit():
+    global con, meta
     #engine = sqlalchemy.create_engine("postgres://postgres@/postgres")
 
     """
@@ -59,11 +64,18 @@ def dbinit():
     # Create the main table if not already created.
     bndbCreateMainTable(con, meta)
 
+    # Create a list of dictionaries to return the con and meta values for
+    # the given db
+    bndbAddToDbList('bcanlp_db', con, meta)
+
     return con, meta
+
+def bndbAddToDbList(db_name, con, meta):
+    db_list.append({dbinfo_array[0]:db_name, dbinfo_array[1]:con, dbinfo_array[2]:meta})
 
 def db_connect(user, password, db, host='localhost',port=5432):
     '''Returns a connection and a metadata object
-       NOTE: check of the port number is ok. It was copied from a site
+       NOTE: check if the port number is ok. It was copied from a site
        with some examples.
     '''
 
@@ -92,6 +104,7 @@ def bndbCreateMainTable(con, meta):
     else:
         bcnlp_main_table = Table('bcnlp_main', meta,
             Column('doc_index', Integer, primary_key=True),
+            Column('doc_name', String),
             Column('num_words', Integer),
             Column('num_pos_np',Integer),
             Column('num_pos_vp',Integer),
@@ -99,8 +112,8 @@ def bndbCreateMainTable(con, meta):
         )
         create_table = True
 
-    if dbu_does_table_exist("bcnlp_main") == True:
-        print("Table bcnlp_main already exists")
+    if dbu_does_table_exist("bcnlp_words") == True:
+        print("Table bcnlp_words already exists")
     else:
         bcnlp_words_table = Table('bcnlp_words', meta,
             Column('name_index', Integer, primary_key=True),
