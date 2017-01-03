@@ -95,14 +95,16 @@ def bcnlpProcessFile(doc_index, infile, con, meta):
     num_words = len(list(n_grams))
     ## print "Length of words list: ", len(list(n_grams))
 
+    doc_name =os.path.basename(infile)
     # Insert {doc_index, num_words, num_pos_np, num_pos_pp, num_pos_vp}
     # into the db.
-    main_table_list = {'doc_index':doc_index, 'num_words':num_words, \
+    main_table_list = {'doc_index':doc_index, 'doc_name':doc_name, \
+         'num_words':num_words, \
          'num_pos_np':num_pos_np, 'num_pos_pp':num_pos_pp, 'num_pos_vp':num_pos_vp}  
     bndbInsert('bcnlp_main', main_table_list, doc_index, con, meta)
 
     ##### Now create a new table of entities for this document and populate.
-    table_name = 'bcnlp_entity_' + str(doc_index) 
+    table_name = 'bcnlp_entity_doc' + str(doc_index) 
     print "Creating bcnlp_entity_x table :", table_name
     bndbCreateNeTable(table_name, con, meta)
     
@@ -181,11 +183,12 @@ if __name__ == "__main__":
             # FIXME: Travere through the directory tree and read in every file.
             # For now assume there is only one level
             i = 0
-            for f in infile:
+            for f in os.listdir(infile):
                 print("file number {}: {}".format(i, f))
-                f_path = os.getcwd() + '/' + infile + '/' + f
+                #f_path = os.getcwd() + '/' + infile + '/' + f
+                f_path = infile + '/' + f
                 print "Processing file ", f_path
-                bcnlpProcessFile(i, f, con, meta)
+                bcnlpProcessFile(i, f_path, con, meta)
                 i += 1
         else:
             bcnlpProcessFile(0, infile, con, meta)
