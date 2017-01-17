@@ -156,6 +156,23 @@ def bndbCreatePosTable(table_name, pos, con, meta):
         print ">>bndbCreateNEtAble: Creating table ", table_name
         meta.create_all(con)
     
+def bndbCreateSimTable(table_name, con, meta):
+    """ One table per document: bcnlp_docx_<n/p/v>p
+    """
+    if dbu_does_table_exist(table_name) == True:
+        print("Table {} already exists".format(table_name))
+        return
+    else:
+        bcnlp_ne_table = Table(table_name, meta,
+            Column('Index', Integer, primary_key=True),
+            Column('Name', String),
+            Column('Semantic', Float),
+            Column('Cosine', Float),
+            Column('Euclidian', Float),
+            Column('Manhattan', Float)
+        )
+        print ">>bndbCreateSimtAble: Creating table ", table_name
+        meta.create_all(con)
 
 def bndbInsert(table, record, doc_index, con, meta):
     ## print("[LOG-Verbose]Inserting record {} to table {}".format(record, table))
@@ -176,14 +193,6 @@ def bndbInsert2(table, record, doc_index, con, meta):
         ## print "[Info-LOG-Verbose]: Record already exists for this index? ", doc_index
         pass
 
-##main_table_matrix = [ {
-##def dbInsertRecordToMainTable():
-
-'''
-def bcnlpDbQueryMainTable(document, con):
-    for row in con.execute(bcnlp_main_table.select()):
-        print row
-'''
 
 # DB Utility functions
 def dbu_get_conn():
@@ -214,10 +223,10 @@ def dbu_drop_table(table_name):
     """
     conn = dbu_get_conn()
     c = conn.cursor()
-    psql_cmd = "drop table " + table_name
+    psql_cmd = "drop table " + table_name + ";"
     try:
         c.execute(psql_cmd)
-        logging.debug('>> Dropped table %s', table_name)
+        debug('>> Dropped table %s', table_name)
         # print ">> Dropped table ", table_name
         conn.commit()
         message_string = "Dropped table "+ table_name
@@ -233,7 +242,7 @@ def dbu_drop_table(table_name):
         return(0, message_string)
     except:
         # Table doesn't exist
-        logging.debug('>> Table %s does not exist ', table_name)
+        print('>> Table {} does not exist '.format(table_name))
         # print ">> Table {} does not exist ".format(table_name)
         message_string = "Table "+ table_name + " does not exist"
         return(-1, message_string)
@@ -243,7 +252,93 @@ def dbu_list_tables(meta):
     for table in meta.tables:
         print table
 
-    
+def dbu_execute_dbcmd(function, **kwargs):
+    """ DB utility function to execute the command specified by 'function'
+        for the given image.
+    """
+    conn = dbu_get_conn()
+    c = conn.cursor()
+    if function in "compare_two_tables":
+        # Takes 2 args: table1 and table2 to be compared. The words
+        # common in both the tables are put into a new table
+        # "andtable_<table1>_<table2>
+        for k,v in kwargs.iteritems():
+            #print "k-%s = v-%s" % (k, v)
+            if k == 'table1': table1 = v
+            if k == 'table2': table2 = v
+
+        logging.debug('dbu_execute_dbcmd: TABLE1: %s TABLE2: %s', table1, table2)
+        #psql_cmd = "create table newtable as (select * from bcnlp_entity_doc0 where name in (select name from bcnlp_entity_doc1));"
+        psql_cmd = 'create table andtable_' + table1 + '_'+table2+' '+ \
+           ' as (select * from ' +table1 + ' where name in (select name from ' +\
+           table2+'));'
+        try:
+            c.execute(psql_cmd)
+            conn.commit()
+        except IOError as err:
+            print("Command {} failed".format(psql_cmd))
+    elif function in "compare_tables":
+        # FIXME: Incomplete code
+        i = 0
+        new_table_name = "andtable_"
+        psql_cmd_part = ""
+        for k,v in kwargs.iteritems():
+            #print "k-%s = v-%s" % (k, v)
+            i += 1
+            con, meta = db_connect('bcnlp', 'bcnlp', 'bcanlp_db')
+            doc_index = bnGetDocIndexForDoc(con, meta, v)
+            #tablename = table+str(i)
+            new_table_name += str(doc_index)
+    elif (function in "get_num_records"):
+        for k,v in kwargs.iteritems():
+            #print "k-%s = v-%s" % (k, v)
+            if k == 'table': table = v
+        #psql_cmd = 'select count(*) '+ table
+        psql_cmd = 'select * from '+ table
+        try:
+            c.execute(psql_cmd)
+            rows = c.fetchall()
+            num_recs = len(rows)
+            conn.commit()
+        except IOError as err:
+            print("Command {} failed".format(psql_cmd))
+            num_recs = -1
+        return num_recs
+
+#def execute_psql_cmd(table1, table2, newtable):
+
+def db_execute_psql_cmd_to_get_common_entities_from_tables(table1, table2):
+    conn = dbu_get_conn()
+    c = conn.cursor()
+    psql_cmd = 'create table andtable_' + table1 + '_'+table2+' '+ \
+       ' as (select * from ' +table1 + ' where name in (select name from ' +\
+       table2+'));'
+    try:
+        c.execute(psql_cmd)
+        conn.commit()
+    except IOError as err:
+        print("Command {} failed".format(psql_cmd))
+
+'''
+def operate_on_2_tables(table1, table2, function):
+    conn = dbu_get_conn()
+    c = conn.cursor()
+
+    if function == 'common_entity_table':
+        psql_cmd = 'create table andtable_' + table1 + '_'+table2+' '+ \
+           ' as (select * from ' +table1 + ' where name in (select name from ' +\
+           table2+'));'
+        print "PSQL CMD: ", psql_cmd
+        try:
+            c.execute(psql_cmd)
+            conn.commit()
+        except IOError as err:
+            print("Command {} failed".format(psql_cmd))
+    elif function == 'semantic_similarity':
+        textacy.similarity.ord2vec(table1, table2)
+'''
+
+
 
 '''
 #class bcnlpTable(bcnlp_db.Model):
