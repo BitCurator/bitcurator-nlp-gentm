@@ -18,6 +18,7 @@ import os
 import codecs
 import subprocess 
 import sys
+import textract
 
 try:
     from argparse import ArgumentParser
@@ -27,28 +28,37 @@ import logging
 # Set up logging location
 logging.basicConfig(filename='span.log', level=logging.DEBUG)
 
+def replace_suffix(filename,orig, new):
+    orig_suffix = '.' + orig
+    new_suffix = '.' + new
+    if filename.endswith(orig):
+        filename = filename[:-len(orig_suffix)+1] + new_suffix
+
+    return filename
+
+
 def extractContents(infile):
     if not infile.endswith('.txt'):
         print("infile {} doesnt end with txt. So textracting".format(infile))
 
+        '''
+        # Note: This is just in case we want to see the conversion
+        # copied to a file
         filename, file_ext = os.path.splitext(infile)
         print("Filename: {}, ext: {}".format(filename, file_ext))
 
         new_infile = replace_suffix(infile,file_ext, 'txt')
         print "new_infile: ", new_infile
-        textract_cmd = 'textract ' + infile + ' > ' + new_infile
-        ## print "CMD: ", textract_cmd
 
-        # Fixme: subprocess is not needed. The above line where textract.process
-        # works fine, but it gives UicodeDecode error. But doing sdubprocess also
-        # gives the same error when f.read() is done. Need to fix this.
-        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xc7 in position 10: invalid continuation byte
-        subprocess.check_output(textract_cmd, shell=True, stderr=subprocess.STDOUT)
-
-        f = codecs.open(infile, "r", "utf-8")
+        f = codecs.open(new_infile, "r", "utf-8")
         input_file_contents = f.read()
 
-        #input_file_contents = textacy.fileio.read.read_file(infile, mode=u'rt', encoding=None)
+        '''
+
+        text = textract.process(infile)
+
+        #nlp expects a unicode text string. 
+        input_file_contents = unicode(text,'utf-8')
 
     else:
         print "Extracting Contents of file", infile
@@ -62,6 +72,9 @@ class ParseForEnts():
     def __init__(self):
         self.spans = []
     def tagEnts(self, text, entity_list):
+        # If text is not unicode, convert it.
+        ###utext = text.decode('string_escape')
+        ###utext = text.encode('utf-8')
         self.spacy_doc = nlp(text)
         logging.debug("SPACY_DOC Entities: \n")
         for ent in self.spacy_doc.ents:
@@ -75,7 +88,7 @@ class ParseForEnts():
             while end < len(self.spacy_doc) and self.spacy_doc[end].is_punct:
                 end += 1
             self.span = self.spacy_doc[start : end]
-            logging.debug("tagEnts: Ent type of word %s is: %s or %s", word, word.ent_type_, word.ent_type_.lower())
+            ##logging.debug("tagEnts: Ent type of word %s is: %s or %s", word, word.ent_type_, word.ent_type_.lower())
             if word.ent_type_ in entity_list or (word.ent_type_).lower() in entity_list:
                 logging.debug("tagEnts: ent_type %s is in entity_list ",word.ent_type_)
                 end_char = "end: "+str(self.span.end_char)
@@ -129,6 +142,7 @@ if __name__ == "__main__":
     span = ParseForEnts()
     nlp = spacy.load('en')
     text = extractContents(infile)
+    #text = utext.decode('string_escape')
     spans = span.tagEnts(text, entity_list)
     logging.debug("const text = %s", text)
     logging.debug("const spans = %s", str(spans)) 
