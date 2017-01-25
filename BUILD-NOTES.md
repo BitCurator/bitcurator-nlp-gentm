@@ -17,7 +17,7 @@ sudo apt-get postgresql pgadmin3 postgresql-server-dev-9.3
 ## Install some dependencies for textract:
 
 ```shell
-sudo apt-get install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev zlib1g-dev
+sudo apt-get install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libffi-dev libmad0 libsox-fmt-mp3 sox libjpeg-dev zlib1g-dev
 ```
 
 ## Set up virtualenv and virtualenvwrapper:
@@ -59,10 +59,15 @@ sudo apt-get install gcc-5 g++-5 libffi-dev
 env CC=/usr/bin/gcc-5 pip3 install -U cld2-cffi
 ```
 
-## Install textacy (this will also install spaCy):
+## [Optional] Install textacy (this will also install spaCy):
 
 ```shell
 pip3 install textacy
+```
+
+## Instqll spaCy (not needed if above option used)
+```shell
+pip3 install spacy
 ```
 
 ## Notes on working in a virtualenv:
