@@ -137,7 +137,7 @@ if __name__ == "__main__":
     if not os.path.exists(outfile):
         logging.debug('writing spans to outfile %s ', outfile)
         with open(outfile, "w") as of:
-            text_line = "const text = "+ text
+            text_line = "const text = '"+ text + "'"
             of.write("%s\n" % text_line)
             span_line = str(spans).replace('(','{')
             span_line = span_line.replace(')','}')
