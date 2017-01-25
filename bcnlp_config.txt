@@ -1,0 +1,26 @@
+#
+# Entity List for tagging
+#
+[entity_list_section]
+person=1
+norp=1
+facility=1
+org=1
+gpe=1
+loc=1
+product=1
+event=1
+work_of_art=1
+languages=1
+date=1
+time=1
+#PERSON      # People
+#NORP        # Nationalities, Religious and political groups
+#FACILITY    # Buildings, Airports, Highways, bridges, etc  
+#ORG         # Companies, agencies, institutions
+#GPE         # Countries, cities, states 
+#LOC         # Locations other than GPE (mountain ranges, water bodies)  
+#PRODUCT     # Objects other than services (ex: devices, foods)
+#EVENT       # Historical events
+#WORK_OF_ART
+#LANGUAGES

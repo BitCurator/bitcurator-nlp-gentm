@@ -17,6 +17,7 @@ import os
 import codecs
 import textract
 import subprocess
+from bcnlp_query import *
 
 class ExtractFileContents:
     """ Using Textacy APIs, this defines methods to extract contents of a file.
@@ -50,20 +51,33 @@ class ExtractFileContents:
             f = codecs.open(infile, "r", "utf-8")
             input_file_contents = f.read()
             '''
+            print "Extracting Contents of file", infile
             input_file_contents = textacy.fileio.read.read_file(infile, mode=u'rt', encoding=None)
             
         return input_file_contents
     
+# fileDictList is a list of dictionaries, each dict consisting of document name 
+# (filename) and its corresponding spacy_doc.
+fileDictList = []
+file_array = ['filename', 'spacy_doc']
+
 class BcnlpExtractEntity:
     """ Using Textacy APIs, this defines methods for extracting useful information
         from the given files.
     """
     
     def __init__(self, infile):
-        ec = ExtractFileContents()
+        efc = ExtractFileContents()
+        print ("INIT: Extract contents for infile: ", infile)
 
-        input_file_contents = ec.extractContents(infile)        
-        self.doc = textacy.Doc(input_file_contents)
+        input_file_contents = efc.extractContents(infile)
+        metadata = {'filename': infile}
+        self.doc = textacy.Doc(input_file_contents, metadata=metadata)
+
+    def bnSaveFileInfo(self, filename, file_index):
+        print("Adding filename:{} and file_index: {}".format(filename, file_index))
+        #fileDictList[file_index].append({file_array[0]:filename, file_array[1]:self.doc})
+        fileDictList.append({file_array[0]:filename, file_array[1]:self.doc})
 
     def bnGetBagOfWords(self):
         # FIXME: Keeping Lemmatize=True doesn't work. Fix it
@@ -82,6 +96,7 @@ class BcnlpExtractEntity:
             return bot
 
     def bnGetCount(self, term):
+        ####print("Getting count for term:{}, doc:{} ".format(term, self.doc))
         return self.doc.count(term)
 
     def bnGetNGrams(self, n):
@@ -111,3 +126,94 @@ class BcnlpExtractEntity:
         freq_of_word = self.doc.count(word)
         print("Freq of the word {} is {}".format(word, freq_of_word))
 
+
+
+def bnExtractDocSimilarity(doc1, doc2, similarity):
+    """Measure the semantic similarity between two documents using
+       Word Movers Distance. Uses Textacy API
+       textacy.similarity.word_movers(doc1, doc2, metric=u'cosine')
+    """
+
+    #if similarity == 'Word Movers':
+    if similarity == 'cosine':
+        # Metric can be cosine, euclidian, I1, I2, or manhattan
+        s = textacy.similarity.word_movers(doc1, doc2,metric=u'cosine')
+        print(" Cosine Similarity between docs {} and {} is: {}".format( \
+                  bnGetDocName(doc1), bnGetDocName(doc2), s))
+    elif similarity == 'Euclidian':
+        s = textacy.similarity.word_movers(doc1, doc2,metric=u'euclidian')
+        print(" Euclidian Similarity between docs {} and {} is: {}".format( \
+                  bnGetDocName(doc1), bnGetDocName(doc2), s))
+    elif similarity == 'Manhattan':
+        s = textacy.similarity.word_movers(doc1, doc2,metric=u'manhattan')
+        print(" Manhattan Similarity between docs {} and {} is: {}".format( \
+                  bnGetDocName(doc1), bnGetDocName(doc2), s))
+    elif similarity == 'word2vec':
+        s = textacy.similarity.word2vec(doc1, doc2)
+        print(" Semantic Similarity between docs {} and {} is: {}".format( \
+                  bnGetDocName(doc1), bnGetDocName(doc2), s))
+    else:
+        # Unsupported similarity method
+        s = 0
+
+    return round(s, 5)
+
+def bnGetDocName(doc):
+    i = 0
+    doc_name = ""
+    Found = False
+    while not Found:
+        spacy_doc = fileDictList[i]['spacy_doc']
+        if doc == spacy_doc:
+            doc_name = fileDictList[i]['filename']
+            Found = True
+        else:
+            i += 1
+    return doc_name
+
+def bnGetDocNameFromIndex(doc_index):
+    i = 0
+    doc_name = ""
+    Found = False
+    while not Found:
+        doc_name = fileDictList[i]['filename']
+        if i==doc_index:
+            return doc_name
+        i += 1
+
+def bnGetNumDocs():
+    i = 0
+    #print fileDictList
+    '''
+    doc_name = fileDictList[i]['filename']
+    while doc_name!= None:
+        doc_name = fileDictList[i]['filename']
+        i+=1
+    return i
+    '''
+
+def bnGetSpacyDocFromIndex(doc_index):
+    """ Given the document index, it returns the corresponding "spacy" document
+        object. This is needed for calling many Textacy APIs.
+    """
+    global con, meta
+    Found = False
+    i = 0
+
+    spacy_doc = None
+    filename = ""
+    num_docs = bcnlp_db.dbu_execute_dbcmd("get_num_records", table="bcnlp_main")
+    logging.debug('bnGetSpacyDocFromIndex: num_docs: %s', str(num_docs))
+    while not Found:
+        if doc_index == i:
+            logging.debug('Found spacy_doc for doc: %s ', str(doc_index))
+            spacy_doc = fileDictList[i]['spacy_doc']
+            filename = fileDictList[i]['filename']
+            Found = True
+        else:
+            i+=1
+            if i > num_docs:
+                break
+    else:
+        logging.debug('bnGetSpacyDocFromIndex: doc info not found for doc index: %s ', str(doc_index))
+    return filename, spacy_doc
