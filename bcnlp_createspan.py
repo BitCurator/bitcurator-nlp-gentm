@@ -18,8 +18,10 @@ import os
 import codecs
 import sys
 import textract
-#import unicodedata
 from warnings import warn
+import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 try:
     from argparse import ArgumentParser
@@ -37,6 +39,42 @@ def replace_suffix(filename,orig, new):
 
     return filename
 
+dict_ent = {}
+dict_time = {}
+dict_org = {}
+dict_person = {}
+dict_gpe = {}
+dict_event = {}
+dict_date = {}
+dict_languages = {}
+dict_facility = {}
+dict_work_of_art = {}
+dict_norp = {}
+dict_loc = {}
+
+def get_dict(ent_type):
+    if ent_type == 'time':
+        return "time", dict_time
+    elif ent_type == 'org':
+        return "org", dict_org
+    elif ent_type == 'person':
+        return "person", dict_person
+    elif ent_type == 'gpe':
+        return "gpe", dict_gpe
+    elif ent_type == 'date':
+        return "date", dict_date
+    elif ent_type == 'languages':
+        return "languages", dict_languages
+    elif ent_type == 'facility':
+        return "facility", dict_facility
+    elif ent_type == 'work_of_art':
+        return "work_of_art", dict_work_of_art
+    elif ent_type == 'norp':
+        return 'norp', dict_norp
+    elif ent_type == 'loc':
+        return "loc", dict_loc
+    else:
+        return None, None
 
 class ParseForEnts():
     """ Parses the given file(s) into entities and generates the span
@@ -47,16 +85,15 @@ class ParseForEnts():
     def __init__(self):
         self.spans = []
     def tagEnts(self, text, entity_list):
-        # If text is not unicode, convert it.
-        ###utext = text.decode('string_escape')
-        ###utext = text.encode('utf-8')
         self.spacy_doc = nlp(text)
         logging.debug("SPACY_DOC Entities: \n")
-
         '''
         for ent in self.spacy_doc.ents:
             logging.debug("%s, %s, %s", ent, ent.label, ent.label_)
         '''
+        print "Entity_list: ", entity_list
+        for i in entity_list:
+            dict_ent[i] = 0
 
         for word in self.spacy_doc[:-1]:
             #logging.debug("Word: %s ", word)
@@ -68,6 +105,9 @@ class ParseForEnts():
             self.span = self.spacy_doc[start : end]
             ##logging.debug("tagEnts: Ent type of word %s is: %s or %s", word, \
                  # word.ent_type_, word.ent_type_.lower())
+            ##print("tagEnts: Ent type of word {} is: {} or {}".format(word, \
+                  ##word.ent_type_, word.ent_type_.lower()))
+
             if word.ent_type_ in entity_list or (word.ent_type_).lower() in entity_list:
                 ## logging.debug("[D]tagEnts: ent_type %s is in entity_list ", \
                       ##word.ent_type_)
@@ -77,6 +117,20 @@ class ParseForEnts():
                 self.spans.append((end_char, start_char, ent_type))
                 ##logging.debug("[D]tagEnts: Appended %s, New SPANS: %s ", \
                       ## word, self.spans)
+
+                # For generating histogram, a new dictionary is created for
+                # each entity. First time the value is initialized to 1.
+                # It is appended for subsequent words
+                edict_name, edict = get_dict(word.ent_type_.lower())
+
+                if edict != None:
+                    if str(word) in edict:
+                        edict[str(word)] += 1
+                    else:
+                        edict[str(word)] = 1
+
+                dict_ent[str(word.ent_type_.lower())] += 1
+
             '''
             # Note: This is commented out to reduce noice in the log file.
             else:
@@ -84,7 +138,7 @@ class ParseForEnts():
                         word.ent_type_, word)
             '''
 
-        return self.spans
+        return self.spans, dict_ent
 
     def extractContents(self, infile):
         """ If infile is not in text format, it uses textract api to extract
@@ -144,7 +198,7 @@ class ParseForEnts():
                 cfg_entity_list.append(key)
         return cfg_entity_list
 
-    def bcnlpProcessDir(self, infile):
+    def bcnlpProcessDir(self, infile, bg):
         """ Recursively calls itself till it finds a file which is not a 
             directory, to process the file contents.
         """
@@ -153,13 +207,13 @@ class ParseForEnts():
             print "\n>> Processing file ", f_path
             logging.debug("bcnlpProcessDir: Processing file %s ",f_path)
             if os.path.isdir(f_path):
-                self.bcnlpProcessDir(f_path)
+                self.bcnlpProcessDir(f_path, bg)
             else:
                 # It is a file
                 logging.debug(">>>> Processing single file %s ", f_path)
-                self.bcnlpProcessSingleFile(f_path)
+                self.bcnlpProcessSingleFile(f_path, bg)
 
-    def bcnlpProcessSingleFile(self, infile):
+    def bcnlpProcessSingleFile(self, infile, bg = False):
         """ Given a file, it extracts the contents and calls tagEnts to
             create the spans for the entities given in the config file. 
         """
@@ -175,7 +229,7 @@ class ParseForEnts():
         if text == None:
             print("textract returned None for file ", infile)
             return
-        spans = self.tagEnts(text, entity_list)
+        spans, dict_ents = self.tagEnts(text, entity_list)
         '''
         # NOTE: just for debugging purpose. Produces a lot of log
         logging.debug("const text = %s", text)
@@ -203,7 +257,27 @@ class ParseForEnts():
             print("Outfile {} exists. So skipping".format(outfile))
     
         print("\n")
-        print(" >> Wrote span info to output file ", outfile)
+        print ">> Wrote span info to output file ", outfile
+
+        if bg == True:
+            print ">> Generating Graphs"
+
+            # First the entity graph
+            bn_generate_bar_graph(dict_ent, infile, \
+                          "Entity Types for document " + infile, -1)
+
+            # Now generate one histogram for each entity. There will be
+            # a huge number of points on the X-axis, but the graph will
+            # display only the top few of them.
+            # Number of bars is hardcoded to 10, but it can be configured
+            # if needed.
+            for ent_type in entity_list:
+                dict_name, entdict = get_dict(ent_type)
+                if dict_name != None:
+                    bn_generate_bar_graph(entdict, \
+                      dict_name+".pdf", \
+                      "Entity : "+dict_name+' ; Document '+infile, 10 )
+
 
     def bnCleanSpanFiles(self, indir):
         """ A utility to remove all the span files generated. It recursively
@@ -221,7 +295,72 @@ class ParseForEnts():
                 logging.debug("Recursively calling bnCleanSpanFiles to remove \
                       files in %s", f_path)
                 self.bnCleanSpanFiles(f_path)
-    
+
+def bn_generate_bar_graph(dict_ent, filename, title, max_items):
+    logging.debug("generate_bar_graph: filename:%s, title: %s ", filename, title)
+    fig = Figure()
+    canvas = FigureCanvas(fig)
+    ax = fig.add_subplot(1,1,1)
+
+    y = []
+    group_labels = []
+
+    # Simple lambda expression to sort the items in ascending order (then reverse it)
+    sorted_items = sorted(dict_ent.items(), key=lambda x: x[1])
+    sorted_items.reverse()
+    num_items = 0
+    for i in sorted_items:
+       y.append(i[1])
+       group_labels.append(i[0])
+       num_items += 1
+       if max_items > 0:
+           if num_items >= max_items:
+               break
+
+    # calculate the number of bars required
+    N = len(y)
+    # generate a range of numbers (just a placeholder before we relabel)
+    ind = range(N)
+
+    # Make the font small and the xticks vertical
+    for label in ax.yaxis.get_ticklabels():
+        # label is a Text instance
+        label.set_fontsize(6)
+
+    for label in ax.xaxis.get_ticklabels():
+        label.set_fontsize(7)
+    # set up the actual graphing
+    ax.bar(ind,y,width=0.1,facecolor = '#888888',ecolor = 'black')
+    ax.set_ylabel('Counts')
+
+    #ax.set_title(' Entity Types in file ' + filename)
+    ax.set_title(title)
+    rects = ax.bar(ind,y,width=0.3,facecolor = '#888888',ecolor = 'black')
+
+    # Write the frequency on top of each bar
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x()+rect.get_width()/2., height+1.0, \
+                      '%d'%int(height), ha='center', va='bottom')
+
+    ax.set_xticks(ind)
+
+    # FIXME: The following line is giving unicodedecode error with some pdf files
+    try:
+        ax.set_xticklabels(group_labels)
+    except:
+        print ">> Possibly Unicode error for entity ", filename
+        return
+    fig.autofmt_xdate()
+
+    #pp = PdfPages(outfile)
+    file_name, file_ext = os.path.splitext(filename)
+    out_file = file_name + 'bg.pdf'
+    canvas.print_figure(out_file)
+    print ">> Graph is in file ", out_file
+
+    #os.system("evince " + out_file)
+
 def unicodify_if_str(x):
     """
     Converts strs into unicodes and leaves everything else unchanged.
@@ -256,6 +395,7 @@ if __name__ == "__main__":
     ##parser.add_argument('--outfile', action='store', help="... ")
     parser.add_argument('--cleanspan', action="store_true", help="... ")
     parser.add_argument('--nolog', action="store_true", help="... ")
+    parser.add_argument('--bg', action="store_true", help="generate bar graphs ")
 
     args = parser.parse_args()
 
@@ -264,8 +404,6 @@ if __name__ == "__main__":
     if args.nolog == True:
         # disable logging to console
         print(">> disabling logging ")
-        #logger = logging.getLogger()
-        #logger.propagate = False
         logging.disable(logging.DEBUG)
 
     if infile == None: 
@@ -287,7 +425,7 @@ if __name__ == "__main__":
         logging.debug("%s is a directory. Traversing the directory", infile)
 
         # Traverse through the directory tree and read in every file.
-        span.bcnlpProcessDir(infile)
+        span.bcnlpProcessDir(infile, args.bg)
     else:
         outfile = infile+".span"
         if os.path.exists(outfile):
@@ -295,5 +433,5 @@ if __name__ == "__main__":
                   format(outfile)) 
             raise SystemExit, -1
         print "Processing bcnlpProcessSingleFile \n"
-        span.bcnlpProcessSingleFile(infile)
+        span.bcnlpProcessSingleFile(infile, args.bg)
         
