@@ -11,7 +11,7 @@ sudo apt-get install virtualenv virtualenvwrapper python3-pip python3-dev
 ## Install postgres and some associated requirements:
 
 ```shell
-sudo apt-get postgresql pgadmin3 postgresql-server-dev-9.3
+sudo apt-get install postgresql pgadmin3 postgresql-server-dev-9.5
 ```
 
 ## Install some dependencies for textract:
