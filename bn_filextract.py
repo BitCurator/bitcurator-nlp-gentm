@@ -64,7 +64,6 @@ def bn_getimginfo(image_path):
 
 # Dict to number of partitions in each image
 partition_in = dict()
-config_file = "bn_config.txt"
 logging.basicConfig(filename= 'bcnlp.log', level=logging.DEBUG)
 
 class bcnlp:
@@ -370,7 +369,7 @@ class bcnlp:
 
 
 def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
-                        image_path, root_path, parse_en, ent):
+                        image_path, root_path, parse_en, ent, config_file):
     """This routine is used to download the indexable files of the Repository
     """
     ## print("Index-debug2: COMM bnlpDnldRepo: Root={} len={} ".format(
@@ -383,7 +382,7 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
     else:
         new_path = root_path
 
-    nlpdir = bnGetConfigInfo("confset_section", "nlp_dir")
+    nlpdir = bnGetConfigInfo(config_file, "confset_section", "nlp_dir")
     if not os.path.exists(nlpdir):
         print ">> Creating nlpdir Directory ", nlpdir 
         os.mkdir(nlpdir)
@@ -429,8 +428,10 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
             '''
             directory_path = app.config['FILES_TO_INDEX_DIR']+"/"+str(image_index) +"/"+new_path
             '''
-            file_extract_dir = bnGetConfigInfo("confset_section", "file_staging_directory")
-            directory_path = os.getcwd() + "/" + file_extract_dir+"/"+str(image_index) +"/"+new_path
+            file_extract_dir = bnGetConfigInfo(config_file, "confset_section", \
+                                            "file_staging_directory")
+            directory_path = os.getcwd() + "/" + \
+                    file_extract_dir+"/"+str(image_index) +"/"+new_path
 
             if not os.path.exists(directory_path):
                 cmd = "mkdir " + re.escape(directory_path)
@@ -444,7 +445,8 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
                 ## print("D2: Created directory {}".format(directory_path))
 
             # Generate the file-list under this directory
-            new_filelist_root, fs = bn.bnlpGenFileList(image_path, image_index, partnum, new_path)
+            new_filelist_root, fs = bn.bnlpGenFileList(image_path, image_index, \
+                                               partnum, new_path)
 
             # if file_list is None, continue
             if new_filelist_root == None:
@@ -454,8 +456,10 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
                 continue
 
             # Call the function recursively
-            logging.debug("bnlpDnldRepo: D2: Calling func recursively with item-name: {}, new_path:{}, item: {}".format(item['name'], new_path, item))
-            bnlpDnldRepo(img, new_filelist_root, fs, image_index, partnum, image_path, new_path, parse_en, ent)
+            logging.debug("bnlpDnldRepo: D2: Calling func recursively with item-name:\
+                {}, new_path:{}, item: {}".format(item['name'], new_path, item))
+            bnlpDnldRepo(img, new_filelist_root, fs, image_index, partnum, \
+                          image_path, new_path, parse_en, ent, config_file)
         else:
             # FIXME: Move all the prints to 2nd level debug logs
             ## print("Index-debug2: bnlpDnldRepo: It is a File", item['name'])
@@ -472,15 +476,16 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
             if isFileTextractable(filename):
 
                 dfxml_file = image_path + "_dfxml.xml"
-                ## print("D2: bnlpDnldRepo: Calling bnlpGetPathFromDfxml: dfxml_file: ", dfxml_file)
                 # We will use the 'real' file name while looking for it in dfxml file
                 new_file_path = bnlpGetPathFromDfxml(item['name'], dfxml_file)
 
                 # If there is space in the file-name, replace it by %20
                 new_file_path = new_file_path.replace(" ", "%20")
 
-                file_extract_dir = bnGetConfigInfo("confset_section", "file_staging_directory")
-                file_path = file_extract_dir + "/" + str(image_index) + "/" + str(new_file_path)
+                file_extract_dir = bnGetConfigInfo(config_file, "confset_section", \
+                                  "file_staging_directory")
+                file_path = file_extract_dir + "/" + str(image_index) + "/" + \
+                                          str(new_file_path)
                 ## print("D: bnlpDnldRepo: Calling bnlpDnldSingleFile function for path: ", file_path)
 
                 ## print (">> Index-debug1: Indexing Image:{}-{}, File: {}".format(img,\
@@ -498,7 +503,8 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
                     ##print("Filename {} is not a txt file. So textracting".format(filename)) 
                     try:
                         input_file_contents = textract.process(file_path) 
-                        #logging.debug("bnlpDnldRepo: File contents of {}: {} ".format(filename, input_file_contents)) 
+                        #logging.debug("bnlpDnldRepo: File contents of \
+                              # {}: {} ".format(filename, input_file_contents)) 
                     except:
                         print("\n >>> textract failed for doc {} ".format(file_path))
                         continue
@@ -600,7 +606,8 @@ def bnlpGetPathFromDfxml(in_filename, dfxmlfile):
         NOTE: In case this process is contributing significantly
         to the indexing time, we need to find a better way to get this info.
     """
-    ##print("##D1: bnlpGetPathFromDfxml: in_filename: {}, dfxmlfile: {}".format(in_filename, dfxmlfile))
+    ##print("##D1: bnlpGetPathFromDfxml: in_filename: {}, \
+                        ##  dfxmlfile: {}".format(in_filename, dfxmlfile))
 
     try:
         tree = ET.parse( dfxmlfile )
@@ -622,7 +629,8 @@ def bnlpGetPathFromDfxml(in_filename, dfxmlfile):
                             # "fielname" has the complete path in the DFXML file.
                             # Extract just the fiename to compare with 
                             base_filename = os.path.basename(f_name)
-                            ## print("##D2: base_filename: {}, f_name: {}".format(base_filename, f_name)) 
+                            ## print("D2: base_filename: {}, \
+                              ##f_name: {}".format(base_filename, f_name)) 
                             if in_filename == base_filename:
                                 return f_name
 
@@ -636,7 +644,7 @@ def bnlpDnldSingleFile(file_item, fs, filepath, index_dir):
         The buffer is copied into a file, which rsides in the same path as it does
         wihtin the disk image.
     """
-    ## print(">> D1: Downloading File: {}, filepath: {} ".format(file_item['name'], filepath))
+    ## print(">> D1:Dnlding File: {}, file: {} ".format(file_item['name'], filepath))
 
     f = fs.open_meta(inode=file_item['inode'])
 
@@ -665,26 +673,7 @@ def bnlpDnldSingleFile(file_item, fs, filepath, index_dir):
     ## print ("D2: Time to index the file ", filepath)
     basepath = os.path.dirname(filepath)
 
-    ## NOTE: If needed, Indexing can be done here
-    ###bnlp_index.IndexFiles(basepath, index_dir)
-
-    ## print("D2: Done Indexing the file. Time to delete it ", filepath)
-
-    ''' For now
-    rmcmd = "rm " + '"' + filepath + '"'
-    subprocess.check_output(rmcmd, shell=True, stderr=subprocess.STDOUT)
-    ## print("D2:: Removed file ", filepath)
-
-    if filepath.endswith('.pdf'):
-        filepath_txt = filepath.replace('.pdf', '.txt')
-        rmcmd_1 = "rm " + '"' + filepath_txt + '"'
-        if os.path.exists(filepath_txt):
-            subprocess.check_output(rmcmd_1, shell=True, stderr=subprocess.STDOUT)
-    '''
-
-
-
-def bnGetConfigInfo(section_name, cfg_string):
+def bnGetConfigInfo(config_file, section_name, cfg_string):
     ## print "GetConfigInfo: Getting ", cfg_string
     config = ConfigObj(config_file)
     section = config[section_name]
@@ -695,7 +684,7 @@ def bnGetConfigInfo(section_name, cfg_string):
     else:
         print "bnGetConfigInfo: Key not found in section ", section_name
 
-def bnGetOutDirFromConfig():
+def bnGetOutDirFromConfig(config_file):
     config = ConfigObj(config_file)
 
     file_extract_dir = "file_staging_directory"
@@ -711,8 +700,9 @@ def bnGetOutDirFromConfig():
        return None
 
 
-def bnExtractFiles(bn, ent, image, image_index, parse_en):
-    logging.debug("Extracting files for image: %s ", image)
+def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
+    logging.debug("Extracting files for image: %s, with config_file: %s "\
+                                                 , image, config_file)
 
     config = ConfigObj(config_file)
 
@@ -728,7 +718,7 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en):
     else:
        print "file_staging_directory not found in config file  using default\n"
 
-    disk_image_dir = bnGetConfigInfo("confset_section", "disk_image_dir")
+    disk_image_dir = bnGetConfigInfo(config_file, "confset_section", "disk_image_dir")
     ## print "Disk image: ", disk_image_dir
     image_path = os.getcwd() + "/" + disk_image_dir + "/" + image
     ## print "Image Path: ", image_path
@@ -771,6 +761,7 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en):
             print "Error: File_list_root is None for image_path {} amd part {}".format(image_path, p)
             continue
         
-        bnlpDnldRepo(image, file_list_root, fs, image_index, p, image_path, '/', parse_en, ent)
+        bnlpDnldRepo(image, file_list_root, fs, image_index, p, image_path, \
+                             '/', parse_en, ent, config_file)
 
 
