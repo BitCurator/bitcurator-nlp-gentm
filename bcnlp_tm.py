@@ -27,7 +27,6 @@ try:
 except ImportError:
     raise ImportError("This script requires ArgumentParser which is in Python 2.7 or Python 3.0")
 
-config_file = "bn_config.txt"
 logging.basicConfig(filename= 'bcnlp_tm.log', level=logging.DEBUG)
 
 
@@ -252,6 +251,7 @@ def bnGetFileContents(filename):
 
 if __name__ == "__main__":
     parser = ArgumentParser(prog='bn_gensim.py', description='Topic modeling')
+    parser.add_argument('--config', action='store', help="... ")
     parser.add_argument('--infile', action='store', help="... ")
     parser.add_argument('--tm', action='store', help="topic modeling :gensim/graphlab ")
 
@@ -259,20 +259,23 @@ if __name__ == "__main__":
 
     # Infile specifies the directory of files to run the topic modeling on.
     # If no argument is specified, it will assume there are disk-images specified
-    # in the config file bn_config.txt. 
+    # in the config file bntm_config.txt.
     infile = args.infile
     tm = args.tm  # Topic modeling type: gensim/graphlab
+    config_file = args.config
     is_disk_image = False
 
     # default it to Graphlab
     if tm == None:
         tm = 'graphlab'
 
+    if config_file == None:
+        config_file = "bntm_config.txt"
+
     if infile == None:
         is_disk_image = True
         # No input directory specified. Look for config file for disk images
 
-        config_file = "bn_config.txt"
         bn_parse_config_file(config_file, "image_section")
         print(">> Images in the config file: ", cfg_image)
 
@@ -280,7 +283,7 @@ if __name__ == "__main__":
         bn = bcnlp()
         for img in cfg_image:
             print ">> Extracting files from image ", cfg_image[img]
-            bnExtractFiles(bn, None, cfg_image[img], i, None)
+            bnExtractFiles(bn, None, cfg_image[img], i, None, config_file)
             i += 1
 
     else:
@@ -292,7 +295,7 @@ if __name__ == "__main__":
         tmc.tm_generate_gensim(infile)
     elif tm == 'graphlab':
         if is_disk_image:
-            indir = bnGetOutDirFromConfig()
+            indir = bnGetOutDirFromConfig(config_file)
             print(">> Generating graphlab for images in disk image")
             logging.debug(">> Generating graphlab for images in disk image")
             logging.debug("File-extracted directory: %s ", indir)
