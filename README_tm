@@ -1,0 +1,8 @@
+1. Populate the config file, "bntm_config.txt" with the relevant images,
+in the "image-section"
+
+2. Run the script /vagrant/provision/bnlp_script to install packages like
+textract, graphlab, etc.
+
+3. Run the script "python bcnlp_tm.py" to kick off the graphlab topic modeling tool.
+
