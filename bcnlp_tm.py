@@ -242,7 +242,7 @@ def bnGetFileContents(filename):
             input_file_contents = tempfile.read()
     
     else:
-        # FIXME For now, exclude jpg files - too many of them in the disk images.
+        # exclude file types specified in the config file FIXME: Use config file
         if not (filename.endswith('.jpg') or filename.endswith('.JPG')):
             print("Filename {} is not a txt file. So textracting".format(filename)) 
             input_file_contents = textract.process(filename) 
@@ -274,17 +274,21 @@ if __name__ == "__main__":
 
     if infile == None:
         is_disk_image = True
+        bn = bcnlp()
+
+        bn.exc_fmt_list = bn.bnGetExFmtsFromConfigFile(config_file)
+        print("Excluded formats in config file: ", bn.exc_fmt_list)
         # No input directory specified. Look for config file for disk images
 
         bn_parse_config_file(config_file, "image_section")
         print(">> Images in the config file: ", cfg_image)
 
         i = 0
-        bn = bcnlp()
         for img in cfg_image:
-            print ">> Extracting files from image ", cfg_image[img]
+            print(">> Extracting files from image {} ...".format(cfg_image[img]))
             bnExtractFiles(bn, None, cfg_image[img], i, None, config_file)
             i += 1
+        print(">> ... Done ")
 
     else:
         print(">> Extracting files from ", infile)
