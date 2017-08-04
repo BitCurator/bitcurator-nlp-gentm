@@ -53,8 +53,7 @@ class ewf_Img_Info(pytsk3.Img_Info):
         return self._ewf_handle.get_media_size()
 
 def bn_getimginfo(image_path):
-    logging.debug("bn_getimginfo: iImage Info for image %s: ", 
-                                          image_path)
+    logging.debug("bn_getimginfo: Image Info for image %s: ", image_path) 
     filenames = pyewf.glob(image_path)
     ewf_handle = pyewf.handle()
     ewf_handle.open(filenames)
@@ -74,6 +73,7 @@ class bcnlp:
     part_array = ["image_path", "addr", "slot_num", "start_offset", "desc"]
     partDictList = []
     num_partitions_ofimg = dict()
+    exc_fmt_list = []
   
     def bnlpGetNumPartsForImage(self, image_path, image_index):
         img = bn_getimginfo(image_path)
@@ -342,6 +342,16 @@ class bcnlp:
 
         return dfxmlfile
 
+    def bnGetExFmtsFromConfigFile(self, config_file):
+        self.exc_fmt_list = []
+        config = ConfigObj(config_file)
+        section = config["exclude_format_section"]
+        for key in section:
+            if section[key]:
+                self.exc_fmt_list.append(key)
+
+        return self.exc_fmt_list
+
     def bnGetFileContents(filename):
         if filename.endswith('.txt') or filename.endswith('.TXT'):
             with open(file_path, 'r') as tempfile:
@@ -349,7 +359,13 @@ class bcnlp:
                 input_file_contents = tempfile.read()
         
         else:
-            print("Filename {} is not a txt file. So textracting".format(filename)) 
+            # Eliminate the files that are configured to be excluded
+            fn, filetype = os.path.splitext(filename)
+            if filetype in exc_fmt_list:
+                logging.debug("File type %s excluded: %s", filetype, fn)
+                return None
+            logging.debug("Filename %s is not a txt file. So textracting", filename) 
+
             try:
                 input_file_contents = textract.process(file_path) 
                 #logging.debug("bnlpDnldRepo: File contents of {}: {} ".format(filename, input_file_contents)) 
@@ -368,7 +384,7 @@ class bcnlp:
         return input_file_contents 
 
 
-def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
+def bnlpDnldRepo(bn, img, root_dir_list, fs, image_index, partnum, \
                         image_path, root_path, parse_en, ent, config_file):
     """This routine is used to download the indexable files of the Repository
     """
@@ -376,7 +392,6 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
                            # root_path, len(root_dir_list)))
 
     num_elements = len(root_dir_list)
-    bn = bcnlp()
     if root_path == '/':
         new_path = ""
     else:
@@ -458,10 +473,9 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
             # Call the function recursively
             logging.debug("bnlpDnldRepo: D2: Calling func recursively with item-name:\
                 {}, new_path:{}, item: {}".format(item['name'], new_path, item))
-            bnlpDnldRepo(img, new_filelist_root, fs, image_index, partnum, \
+            bnlpDnldRepo(bn, img, new_filelist_root, fs, image_index, partnum, \
                           image_path, new_path, parse_en, ent, config_file)
         else:
-            # FIXME: Move all the prints to 2nd level debug logs
             ## print("Index-debug2: bnlpDnldRepo: It is a File", item['name'])
             filename = item['name'] # FIXME: Test more to make sure files with space work.
             #if item['name_slug'] != "None" and item['inode'] == int(inode) :
@@ -473,7 +487,7 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
                 filename = item['name_slug']
 
             # If it is indexable file, download it and generate index.
-            if isFileTextractable(filename):
+            if isFileTextractable(bn, filename):
 
                 dfxml_file = image_path + "_dfxml.xml"
                 # We will use the 'real' file name while looking for it in dfxml file
@@ -501,6 +515,12 @@ def bnlpDnldRepo(img, root_dir_list, fs, image_index, partnum, \
         
                 else:
                     ##print("Filename {} is not a txt file. So textracting".format(filename)) 
+                    fn, filetype = os.path.splitext(filename)
+                    if filetype in bn.exc_fmt_list:
+                        logging.debug("bnlpDnldRepo: File type %s excluded", filetype)
+                        continue
+                    logging.debug("Filename %s is not a txt file. So textracting", 
+                                        filename) 
                     try:
                         input_file_contents = textract.process(file_path) 
                         #logging.debug("bnlpDnldRepo: File contents of \
@@ -583,17 +603,23 @@ def bnDoNlp(contents, tool, parse_en, img_file, of, of_sents, of_post):
 """
     
 
-
 # FIXME: If indexable it is also nlp'able - for now we will keep the name as is
-def isFileTextractable(filename):
+def isFileTextractable(bn, filename):
     if (filename.endswith('.txt') or filename.endswith('.TXT') or  \
         filename.endswith('.pdf') or filename.endswith('.PDF') or \
-        filename.endswith('.xml') or filename.endswith('.XML') or \
+        filename.endswith('.bnGetExFmtsFromConfigFilexml') or filename.endswith('.XML') or \
         filename.endswith('.doc') or filename.endswith('.DOC') or \
         filename.endswith('.htm') or filename.endswith('.HTM;1') or \
         filename.endswith('.html') or filename.endswith('.HTML') or \
         filename.endswith('.jpg') or filename.endswith('.JPG') ):
-        
+
+        # if any of the above types are configured to be exluded, filter them out.
+        fn, fe = os.path.splitext(filename)
+        logging.debug("isFileTextratable:file:%s, exc_fmt_list: %s", \
+                                bn.exc_fmt_list, filename)
+        if fe in bn.exc_fmt_list:
+            logging.debug("isTextraxtable:File %s configured to be excluded",filename)
+            return False
         return True
     else:
         return False
@@ -717,7 +743,6 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
            break
     else:
        print "file_staging_directory not found in config file  using default\n"
-
     disk_image_dir = bnGetConfigInfo(config_file, "confset_section", "disk_image_dir")
     ## print "Disk image: ", disk_image_dir
     image_path = os.getcwd() + "/" + disk_image_dir + "/" + image
@@ -725,7 +750,7 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
     
            
     file_extract_dir_path = os.getcwd() + '/'+ file_extract_dir
-    print "\nFiles will be extracted in ", file_extract_dir_path
+    print "\n>> Files will be extracted in ", file_extract_dir_path
 
     cmd = "mkdir " + file_extract_dir
     if not os.path.exists(file_extract_dir):
@@ -741,11 +766,11 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
     bn.num_partitions = bn.bnlpGetPartInfoForImage(image_path, image_index)
     ## print "NUM of partitions: ", bn.num_partitions
 
-    # Geenrate dfxml file if doesn't exist
+    # Generate dfxml file if doesn't exist
     #file_extract_dir = bnGetConfigInfo("confset_section", "file_staging_directory")
     dfxmlfile = image_path +"_dfxml.xml"
     if not os.path.exists(dfxmlfile):
-        print "D Generating dfxml file as it doesn't exist ", dfxmlfile
+        print(">> Generating dfxml file as it doesn't exist ".format(dfxmlfile))
         bn.bnlpGenerateDfxml(image_path, dfxmlfile)
 
     partition_in[image] = bn.num_partitions
@@ -761,7 +786,7 @@ def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
             print "Error: File_list_root is None for image_path {} amd part {}".format(image_path, p)
             continue
         
-        bnlpDnldRepo(image, file_list_root, fs, image_index, p, image_path, \
+        bnlpDnldRepo(bn, image, file_list_root, fs, image_index, p, image_path, \
                              '/', parse_en, ent, config_file)
 
 
