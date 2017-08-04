@@ -4,18 +4,24 @@
 
 [image_section]
 #charlie-work-usb-2009-12-11.E01 = 1
-#terry-work-usb-2009-12-11.E01 = 1
+terry-work-usb-2009-12-11.E01 = 1
 #terry-work-usb-2009-12-11.E01 = 1
 #dup_charlie.E01 = 1
 #jo-favorites-usb-2009-12-11.E01 = 1
-uncusb.E01 = 1
-uncusbnew.E01 = 1
+#uncusb.E01 = 1
+#uncusbnew.E01 = 1
 
 [confset_section]
-disk_image_dir = "disk_images"
+disk_image_dir = "disk-images"
 file_staging_directory = "filextract_dir"
 nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
+
+[exclude_format_section]
+.jpg=1
+.JPG=1
+.mp3=1
+.wav=1
 
 [entity_list_section]
 person=1
