@@ -4,12 +4,12 @@
 
 [image_section]
 #charlie-work-usb-2009-12-11.E01 = 1
-terry-work-usb-2009-12-11.E01 = 1
+#terry-work-usb-2009-12-11.E01 = 1
 #terry-work-usb-2009-12-11.E01 = 1
 #dup_charlie.E01 = 1
 #jo-favorites-usb-2009-12-11.E01 = 1
-#uncusb.E01 = 1
-#uncusbnew.E01 = 1
+uncusb.E01 = 1
+uncusbnew.E01 = 1
 
 [confset_section]
 disk_image_dir = "disk-images"
