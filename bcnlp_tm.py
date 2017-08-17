@@ -11,6 +11,9 @@
 #
 # This file contains the main BitCurator NLP application for Topic modeling
 
+# Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>]
+# Default num_topics = 10, tm=graphlab
+
 import os
 import logging
 import pyLDAvis
@@ -108,7 +111,7 @@ class BnTopicModel():
         #pyLDAvis.display(vis_data)
         pyLDAvis.show(vis_data)
     
-    def tm_generate_graphlab(self, indir):
+    def tm_generate_graphlab(self, indir, num_topics):
         ''' Generate the LDA model for documents in indir, using graphlab
         '''
         print(">> Graphlab: Creating SArray")
@@ -117,8 +120,8 @@ class BnTopicModel():
         sa_docs = gl.text_analytics.count_words(sa)
         sa_docs_nsw = sa_docs.dict_trim_by_keys(gl.text_analytics.stopwords(), True)
 
-        print(">> Graphlab: Creating topic model: ")
-        topic_model = gl.topic_model.create(sa_docs_nsw, num_topics=20, num_iterations=100)
+        print(">> Graphlab: Creating topic model with {} topics: ".format(num_topics))
+        topic_model = gl.topic_model.create(sa_docs_nsw, num_topics=int(num_topics), num_iterations=100)
 
         print("Graphlab: Preparing data: ")
         vis_data = pyLDAvis.graphlab.prepare(topic_model, sa_docs_nsw)
@@ -254,6 +257,7 @@ if __name__ == "__main__":
     parser.add_argument('--config', action='store', help="... ")
     parser.add_argument('--infile', action='store', help="... ")
     parser.add_argument('--tm', action='store', help="topic modeling :gensim/graphlab ")
+    parser.add_argument('--topics', action='store', help="number of topics ")
 
     args = parser.parse_args()
 
@@ -264,6 +268,10 @@ if __name__ == "__main__":
     tm = args.tm  # Topic modeling type: gensim/graphlab
     config_file = args.config
     is_disk_image = False
+
+    num_topics = 10
+    if args.topics:
+        num_topics = args.topics
 
     # default it to Graphlab
     if tm == None:
@@ -303,7 +311,7 @@ if __name__ == "__main__":
             print(">> Generating graphlab for images in disk image")
             logging.debug(">> Generating graphlab for images in disk image")
             logging.debug("File-extracted directory: %s ", indir)
-            tmc.tm_generate_graphlab(indir)
+            tmc.tm_generate_graphlab(indir, num_topics)
         else:
             print(">> Generating graphlab for files in ", infile)
             logging.debug(">> Generating graphlab for files in %s", infile)
