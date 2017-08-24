@@ -288,4 +288,9 @@ pip install gensim
 echo "Installing pyLDAvis"
 pip install pyLDAvis
 
+# The following are needed for bn_plot
+pip install matplotlib
+pip install spacy
+python -m spacy download en
+
 complete_message
