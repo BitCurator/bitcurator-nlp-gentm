@@ -65,7 +65,7 @@ def bn_getimginfo(image_path):
 partition_in = dict()
 logging.basicConfig(filename= 'bcnlp.log', level=logging.DEBUG)
 
-class bcnlp:
+class BnFilextract:
     """ This class contains the file extraction methods from 
         disk images.
     """
@@ -296,7 +296,7 @@ class bcnlp:
                 if not "xmlns" in line:
                     if "dc:type" in line:
                         line = line.replace("dc:type","type")
-                    fout.write(line)
+                        fout.write(line)
 
         fin.close()
         fout.close()
@@ -352,25 +352,26 @@ class bcnlp:
 
         return self.exc_fmt_list
 
-    def bnGetFileContents(filename):
+    def bnGetFileContents(self, filename):
         if filename.endswith('.txt') or filename.endswith('.TXT'):
-            with open(file_path, 'r') as tempfile:
+            with open(filename, 'r') as tempfile:
                 #input_file_contents = tempfile.read().replace('\n', '')
                 input_file_contents = tempfile.read()
         
         else:
             # Eliminate the files that are configured to be excluded
             fn, filetype = os.path.splitext(filename)
-            if filetype in exc_fmt_list:
+            if filetype in self.exc_fmt_list:
                 logging.debug("File type %s excluded: %s", filetype, fn)
                 return None
             logging.debug("Filename %s is not a txt file. So textracting", filename) 
 
             try:
-                input_file_contents = textract.process(file_path) 
-                #logging.debug("bnlpDnldRepo: File contents of {}: {} ".format(filename, input_file_contents)) 
+                input_file_contents = textract.process(filename)
+                #logging.debug("bcnlp:: File contents of %s %s ",\
+                    # filename, input_file_contents)
             except:
-                print("\n >>> textract failed for doc {} ".format(file_path))
+                print("\n >>> textract failed for doc {} ".format(filename))
                 return None
 
         '''
@@ -382,6 +383,29 @@ class bcnlp:
             return None
         '''
         return input_file_contents 
+
+    def bn_traverse_infile_dir(self, filextract_dir, documents):
+        ''' This routine traverses the given directory to extract the
+        files and adds the contents to the global documents list.
+        '''
+
+        num_docs = 0
+        for root, dirs, files in os.walk(filextract_dir):
+            path = root.split(os.sep)
+            '''
+            print "path: ", path, len(path)
+            print "dirs: ", dirs
+            print "files: ", files
+            print((len(path) - 1) * '---', os.path.basename(root))
+            '''
+            for filename in files:
+                file_path = '/'.join(path) + '/' + filename
+                doc = self.bnGetFileContents(file_path)
+                # print("bnTraverseInFileDir: Appending doc {} \
+                                     # to documents list ".format(doc))
+                documents.append(doc)
+                num_docs += 1
+            # print "bnTraverseInFileDir: Total num docs: ", num_docs
 
 
 def bnlpDnldRepo(bn, img, root_dir_list, fs, image_index, partnum, \
@@ -547,7 +571,7 @@ def bnlpDnldRepo(bn, img, root_dir_list, fs, image_index, partnum, \
                 #ent.bcnlpProcessSingleFile(file_path, bg=False)
                 entity_list = None
                 if ent != None:
-                    entity_list = ent.bnParseConfigFileForEnts("bn_config.txt")
+                    entity_list = ent.bnParseConfigFileForEnts(config_file)
                 
                 '''
                 try:
