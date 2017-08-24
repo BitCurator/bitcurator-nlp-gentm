@@ -230,7 +230,7 @@ def bnTraverseInfileDir(filextract_dir):
         for filename in files:
             file_path = '/'.join(path) + '/' + filename
             # print "bnTraverseInFileDir: File Path: ", file_path
-            doc = bnGetFileContents(file_path)
+            doc = bn.bnGetFileContents(file_path)
             # print("bnTraverseInFileDir: Appending doc {} \
                                  # to documents list ".format(doc))
             documents.append(doc)
@@ -238,20 +238,6 @@ def bnTraverseInfileDir(filextract_dir):
 
         # print "bnTraverseInFileDir: Total num docs: ", num_docs
         
-def bnGetFileContents(filename):
-    if filename.endswith('.txt') or filename.endswith('.TXT'):
-        with open(filename, 'r') as tempfile:
-            #input_file_contents = tempfile.read().replace('\n', '')
-            input_file_contents = tempfile.read()
-    
-    else:
-        # exclude file types specified in the config file FIXME: Use config file
-        if not (filename.endswith('.jpg') or filename.endswith('.JPG')):
-            print("Filename {} is not a txt file. So textracting".format(filename)) 
-            input_file_contents = textract.process(filename) 
-
-    return input_file_contents 
-
 if __name__ == "__main__":
     parser = ArgumentParser(prog='bn_gensim.py', description='Topic modeling')
     parser.add_argument('--config', action='store', help="... ")
@@ -264,6 +250,7 @@ if __name__ == "__main__":
     # Infile specifies the directory of files to run the topic modeling on.
     # If no argument is specified, it will assume there are disk-images specified
     # in the config file bntm_config.txt.
+
     infile = args.infile
     tm = args.tm  # Topic modeling type: gensim/graphlab
     config_file = args.config
@@ -280,9 +267,9 @@ if __name__ == "__main__":
     if config_file == None:
         config_file = "bntm_config.txt"
 
+    bn = BnFilextract()
     if infile == None:
         is_disk_image = True
-        bn = bcnlp()
 
         bn.exc_fmt_list = bn.bnGetExFmtsFromConfigFile(config_file)
         print("Excluded formats in config file: ", bn.exc_fmt_list)
@@ -300,7 +287,7 @@ if __name__ == "__main__":
 
     else:
         print(">> Extracting files from ", infile)
-        bnTraverseInfileDir(infile)
+        bn.bn_traverse_infile_dir(infile, documents)
 
     tmc = BnTopicModel()
     if tm == 'gensim':
@@ -315,6 +302,6 @@ if __name__ == "__main__":
         else:
             print(">> Generating graphlab for files in ", infile)
             logging.debug(">> Generating graphlab for files in %s", infile)
-            tmc.tm_generate_graphlab(infile)
+            tmc.tm_generate_graphlab(infile, num_topics)
 
 
