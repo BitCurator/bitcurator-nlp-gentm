@@ -68,11 +68,11 @@ class BnTopicModel():
         corpora.MmCorpus.serialize('/tmp/saved_dict.mm', corpus)  
     
         ## Creating Transformations
-        ## The transformations are standard Python objects, typically initialized 
-        ## (trained) by means of a training corpus:
-        ## First, let's use tfidf for training: It just involves simply going thru
-        ## the supplied corpus once and computing document frequencies of all its
-        ## featuers.  
+        ## The transformations are standard Python objects, typically 
+        ## initialized (trained) by means of a training corpus:
+        ## First, let's use tfidf for training: It just involves simply 
+        ## going thru the supplied corpus once and computing document 
+        ## frequencies of all its featuers.  
     
         tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
         
@@ -84,10 +84,12 @@ class BnTopicModel():
         for doc in corpus_tfidf:
             print (doc)
     
-        # Now Initialize an LSI transformation: num_topics set to 2 to make it 2D
-        lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=3)
+        # Now Initialize an LSI transformation: num_topics set to 2 to make 
+        # it 2D lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, 
+        # num_topics=3)
     
-        # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
+        # create a double wrapper over the original corpus: 
+        # bow->tfidf->fold-in-lsi
         corpus_lsi = lsi[corpus_tfidf]
     
         print "Printing LSI topics"
@@ -98,7 +100,9 @@ class BnTopicModel():
         '''
         
         # Create an LDA model
-        lda_model = models.LdaModel(corpus_tfidf, id2word=dictionary, num_topics=5)
+        lda_model = models.LdaModel(corpus_tfidf, \
+                                    id2word=dictionary, \
+                                    num_topics=5)
         corpus_lda = lda_model[corpus]
     
         corpus_lda_tfidf = lda_model[corpus_tfidf]
@@ -118,10 +122,13 @@ class BnTopicModel():
         sa = self.bnGenerateSArray(indir)
 
         sa_docs = gl.text_analytics.count_words(sa)
-        sa_docs_nsw = sa_docs.dict_trim_by_keys(gl.text_analytics.stopwords(), True)
+        sa_docs_nsw = sa_docs.dict_trim_by_keys(gl.text_analytics.stopwords(), \
+                                                True)
 
-        print(">> Graphlab: Creating topic model with {} topics: ".format(num_topics))
-        topic_model = gl.topic_model.create(sa_docs_nsw, num_topics=int(num_topics), num_iterations=100)
+        print(">> Graphlab: Creating topic model with {} topics: ".\
+                                        format(num_topics))
+        topic_model = gl.topic_model.create(sa_docs_nsw, \
+                      num_topics=int(num_topics), num_iterations=100)
 
         print("Graphlab: Preparing data: ")
         vis_data = pyLDAvis.graphlab.prepare(topic_model, sa_docs_nsw)
@@ -130,12 +137,13 @@ class BnTopicModel():
         pyLDAvis.show(vis_data)
 
     def bnGenerateSArray(self, filextract_dir):
-        ''' Traverse through the files in a directory and create sArrays and append 
-            them into one single sArray.
+        ''' Traverse through the files in a directory and create sArrays 
+            and append them into one single sArray.
         '''
         num_docs = 0
         sa_g = gl.SArray(dtype = str)
-        sw_list = ['a', 'an', 'the', 'of', 'to', 'for','as', 'from', 'is', 'was', 'were', 'are', ',', '-', '|', '@', '.' ]
+        sw_list = ['a', 'an', 'the', 'of', 'to', 'for','as', 'from', 'is', \
+                         'was', 'were', 'are', ',', '-', '|', '@', '.' ]
         for root, dirs, files in os.walk(filextract_dir):
             path = root.split(os.sep)
             '''
@@ -202,7 +210,8 @@ def bn_parse_config_file(config_file, section_name):
             # found the string
             #return section[key]
         if section_name == "image_section":
-            logging.debug("parse_config: key: %s, section: %s", key, section[key])
+            logging.debug("parse_config: key: %s, section: %s", \
+                            key, section[key])
             cfg_image[i] = key
             i+=1
         elif section_name == "entity_list_section":
@@ -242,13 +251,14 @@ if __name__ == "__main__":
     parser = ArgumentParser(prog='bn_gensim.py', description='Topic modeling')
     parser.add_argument('--config', action='store', help="... ")
     parser.add_argument('--infile', action='store', help="... ")
-    parser.add_argument('--tm', action='store', help="topic modeling :gensim/graphlab ")
+    parser.add_argument('--tm', action='store',  \
+                         help="topic modeling :gensim/graphlab ")
     parser.add_argument('--topics', action='store', help="number of topics ")
 
     args = parser.parse_args()
 
     # Infile specifies the directory of files to run the topic modeling on.
-    # If no argument is specified, it will assume there are disk-images specified
+    # If no argument specified, it will assume there are disk-images specified
     # in the config file bntm_config.txt.
 
     infile = args.infile
@@ -281,7 +291,7 @@ if __name__ == "__main__":
         i = 0
         for img in cfg_image:
             print(">> Extracting files from image {} ...".format(cfg_image[img]))
-            bnExtractFiles(bn, None, cfg_image[img], i, None, config_file)
+            bn.bnExtractFiles(None, cfg_image[img], i, None, config_file)
             i += 1
         print(">> ... Done ")
 
@@ -294,7 +304,7 @@ if __name__ == "__main__":
         tmc.tm_generate_gensim(infile)
     elif tm == 'graphlab':
         if is_disk_image:
-            indir = bnGetOutDirFromConfig(config_file)
+            indir = bn.bnGetOutDirFromConfig(config_file)
             print(">> Generating graphlab for images in disk image")
             logging.debug(">> Generating graphlab for images in disk image")
             logging.debug("File-extracted directory: %s ", indir)
