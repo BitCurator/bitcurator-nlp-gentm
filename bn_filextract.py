@@ -110,7 +110,8 @@ class BnFilextract:
             volume = pytsk3.Volume_Info(img)
             is_partition_info = True
         except:
-            ## print "bnlpGetPartionInfoForImage: Volume Info failed. Could be FAT12 "
+            ## print "bnlpGetPartionInfoForImage: Volume Info failed.
+            ## Could be FAT12 "
             self.num_partitions = 1
             is_partition_info = False
             fs = pytsk3.FS_Info(img, offset=0)
@@ -187,7 +188,8 @@ class BnFilextract:
                                   image_name, self.num_partitions)
         return (self.num_partitions)
 
-    bnlpFileInfo = ['name', 'size', 'mode', 'inode', 'p_inode', 'mtime', 'atime', 'ctime', 'isdir', 'deleted', 'name_slug']
+    bnlpFileInfo = ['name', 'size', 'mode', 'inode', 'p_inode', 'mtime', \
+                     'atime', 'ctime', 'isdir', 'deleted', 'name_slug']
 
     def bnlpListFiles(self, fs, path, image_index, partition_num):
         file_list = []
@@ -261,7 +263,8 @@ class BnFilextract:
         img = bn_getimginfo(image_path)
         # Get the start of the partition:
         
-        part_start = self.partDictList[int(image_index)][partition_num]['start_offset']
+        part_start =  \
+         self.partDictList[int(image_index)][partition_num]['start_offset']
 
         # Open the file system for this image at the extracted
         # start_offset.
@@ -271,24 +274,6 @@ class BnFilextract:
 
         return file_list_root, fs
 
-    '''
-    def fixup_dfxmlfile(self, dfxmlfile):
-        ##fin = open(dfxmlfile)
-        ##fout = open("tempfile", "w")
-
-        ###with open(dfxmlfile) as fin, open("tempfile") as fout:
-            ###for line in fin:
-                ###if not "xmlns" in line:
-                    ###fout.write(line)
-        linenumber = 0
-        for line in fileinput.input (dfxmlfile, inplace=1):
-            linenumber += 1
-            if "xmlns" in line:
-                logging.debug('Why is this here??? ')
-                # print "",
-            if linenumber > 6:
-                break
-    '''
     def fixup_dfxmlfile(self, dfxmlfile):
         ## print("D: Fix up the dfxml file: ")
         with open(dfxmlfile) as fin, open("/tmp/tempfile", "w") as fout:
@@ -407,187 +392,386 @@ class BnFilextract:
                 num_docs += 1
             # print "bnTraverseInFileDir: Total num docs: ", num_docs
 
+    def bnExtractFiles(self, ent, image, image_index, parse_en, config_file):
+        logging.debug("Extracting files for img: %s, with config_file: %s ",\
+                                                 image, config_file)
 
-def bnlpDnldRepo(bn, img, root_dir_list, fs, image_index, partnum, \
+        config = ConfigObj(config_file)
+
+        file_extract_dir = "file_staging_directory"
+        config_section = config['confset_section']
+        for key in config_section:
+           #print (key, config_section[key])
+           if key == "file_staging_directory":
+               file_extract_dir = config_section[key]
+               break
+        else:
+           print "file_staging_directory not found in config file. \
+                          using default\n"
+        disk_image_dir = self.bnGetConfigInfo(config_file, \
+                         "confset_section", "disk_image_dir")
+        ## print "Disk image: ", disk_image_dir
+        image_path = os.getcwd() + "/" + disk_image_dir + "/" + image
+        ## print "Image Path: ", image_path
+
+        file_extract_dir_path = os.getcwd() + '/'+ file_extract_dir
+        print "\n>> Files will be extracted in ", file_extract_dir_path
+
+        cmd = "mkdir " + file_extract_dir
+        if not os.path.exists(file_extract_dir):
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        file_extract_dir_per_image = file_extract_dir + '/' + str(image_index)
+        cmd = "mkdir " + file_extract_dir_per_image
+        if not os.path.exists(file_extract_dir_per_image):
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+
+        # FIXME: For multipart image, find the numparts here
+        # partition_in[img] = self.num_partitions  (just a placeholder)
+        # for now, num_partitions = 1
+        self.num_partitions = \
+            self.bnlpGetPartInfoForImage(image_path, image_index)
+        ## print "NUM of partitions: ", self.num_partitions
+
+        # Generate dfxml file if doesn't exist
+        #file_extract_dir = self.bnGetConfigInfo("confset_section",
+                        # "file_staging_directory")
+        dfxmlfile = image_path +"_dfxml.xml"
+        if not os.path.exists(dfxmlfile):
+            print(">> Generating dfxml file as it doesn't exist ".\
+                         format(dfxmlfile))
+            self.bnlpGenerateDfxml(image_path, dfxmlfile)
+
+        partition_in[image] = self.num_partitions
+
+        root_dir = os.getcwd()
+
+        for p in range(0, self.num_partitions):
+            # make the directory for this img and partition
+            part_dir = str(root_dir) + '/img'+str(image_index)+"_"+ str(p)
+            file_list_root, fs =  \
+              self.bnlpGenFileList(image_path, image_index,int(p), '/')
+
+            if file_list_root == None:
+                print "Error: File_list_root is None for image_path {} \
+                            and part {}".format(image_path, p)
+                continue
+
+            self.bnlpDnldRepo(image, file_list_root, fs, image_index, p, \
+                               image_path, '/', parse_en, ent, config_file)
+
+
+    def isFileTextractable(self, filename):
+        if (filename.endswith('.txt') or filename.endswith('.TXT') or  \
+            filename.endswith('.pdf') or filename.endswith('.PDF') or \
+            filename.endswith('.bnGetExFmtsFromConfigFilexml') or \
+            filename.endswith('.XML') or \
+            filename.endswith('.doc') or filename.endswith('.DOC') or \
+            filename.endswith('.htm') or filename.endswith('.HTM;1') or \
+            filename.endswith('.html') or filename.endswith('.HTML') or \
+            filename.endswith('.jpg') or filename.endswith('.JPG') ):
+
+            # if any of the above types are configured to be exluded,
+            # filter them out.
+            fn, fe = os.path.splitext(filename)
+            logging.debug("isFileTextratable:file:%s, exc_fmt_list: %s", \
+                                    self.exc_fmt_list, filename)
+            if fe in self.exc_fmt_list:
+                logging.debug("isTextraxtable:File %s configured \
+                             to be excluded",filename)
+                return False
+            return True
+        else:
+            return False
+
+    def bnlpDnldRepo(self, img, root_dir_list, fs, image_index, partnum, \
                         image_path, root_path, parse_en, ent, config_file):
-    """This routine is used to download the indexable files of the Repository
-    """
-    ## print("Index-debug2: COMM bnlpDnldRepo: Root={} len={} ".format(
+        """This routine is used to download the indexable files of the Repo
+        """
+        ## print("Index-dbg2:COMM bnlpDnldRepo: Root={} len={} ".format(\
                            # root_path, len(root_dir_list)))
 
-    num_elements = len(root_dir_list)
-    if root_path == '/':
-        new_path = ""
-    else:
-        new_path = root_path
-
-    nlpdir = bnGetConfigInfo(config_file, "confset_section", "nlp_dir")
-    if not os.path.exists(nlpdir):
-        print ">> Creating nlpdir Directory ", nlpdir 
-        os.mkdir(nlpdir)
-    else:
-        logging.debug(">> Directory %s exists. ", nlpdir)
-
-    token_file = nlpdir + "/" + "token_file"
-    sents_file = nlpdir + "/" + "sents_file"
-    post_file = nlpdir + "/" + "post_file"
-    #of = open(token_file,"wb")
-    of = open(token_file,"a")
-    of_sents = open(sents_file,"a")
-    of_post = open(post_file,"a")
-
-    ## print "Index-debug2: bnlpDnldRepo: iterating within root_Dir_list:{}, \
-    ##                     new_path:{} ".format(root_dir_list, new_path)
-    for item in root_dir_list:
-        if item['isdir'] == True:
-            logging.debug("bnlpDnldRepo: D1:It is a Directory %s", str(item['name']))
-            if item['name'] == '.' or item['name'] == '..':
-                continue
-
-            if new_path == None:
-               ## print "Index-debug1: root_path is None. Name: ", item['name']
-               continue
-
-            new_path = new_path + '/'+ str(item['name'])
-
-            dfxml_file = image_path + "_dfxml.xml"
-
-            new_path = bnlpGetPathFromDfxml(str(item['name']), dfxml_file)
-            ## print("D: bnlpDnldRepo: path from Dfxml file: ", new_path)
-            if new_path == None:
-               ## print "Index-debug1: Path for file {} is not found in \
-               ##                    DFXML".format(dfxml_file)
-               continue
-            # We will add image_index to the path so we can later extract the 
-            # image name to be displayed. We could have passed the image name 
-            # itself, instead of the index, but if the image name has special 
-            # characters, we might bump into unexpected errors while creating
-            # files/directories with an unknown string. So chose to use the image 
-            # index here and later extract the corresponding image name.
-            '''
-            directory_path = app.config['FILES_TO_INDEX_DIR']+"/"+str(image_index) +"/"+new_path
-            '''
-            file_extract_dir = bnGetConfigInfo(config_file, "confset_section", \
-                                            "file_staging_directory")
-            directory_path = os.getcwd() + "/" + \
-                    file_extract_dir+"/"+str(image_index) +"/"+new_path
-
-            if not os.path.exists(directory_path):
-                cmd = "mkdir " + re.escape(directory_path)
-                ## print("bnlpDnldRepo: Creating directry with command: ", cmd)
-                try:
-                    shelloutput = subprocess.check_output(cmd, shell=True)
-                except subprocess.CalledProcessError as cmdexcept:
-                    logging.debug('Error return code: %s ', cmdexcept.returncode)
-                    logging.debug('Error output: %s ', cmdexcept.output)
-                    # print "Error code: ", cmdexcept.returncode, cmdexcept.output
-                ## print("D2: Created directory {}".format(directory_path))
-
-            # Generate the file-list under this directory
-            new_filelist_root, fs = bn.bnlpGenFileList(image_path, image_index, \
-                                               partnum, new_path)
-
-            # if file_list is None, continue
-            if new_filelist_root == None:
-                ## print "Index-debug1: GetFileList returned Null filelist_root \
-                ##          for Image Path {}, partnum {}, new_path: \
-                ##          {}".format(image_path, partnum, new_path)  
-                continue
-
-            # Call the function recursively
-            logging.debug("bnlpDnldRepo: D2: Calling func recursively with item-name:\
-                {}, new_path:{}, item: {}".format(item['name'], new_path, item))
-            bnlpDnldRepo(bn, img, new_filelist_root, fs, image_index, partnum, \
-                          image_path, new_path, parse_en, ent, config_file)
+        num_elements = len(root_dir_list)
+        if root_path == '/':
+            new_path = ""
         else:
-            ## print("Index-debug2: bnlpDnldRepo: It is a File", item['name'])
-            filename = item['name'] # FIXME: Test more to make sure files with space work.
-            #if item['name_slug'] != "None" and item['inode'] == int(inode) :
-            if item['name_slug'] != "None" :
+            new_path = root_path
 
-                # Strip the digits after the last "-" from filepath to get inode
-                #new_filepath, separater, inode = filepath.rpartition("-")
-                ## print("D >> Found a slug name ",item['name'], item['name_slug'])
-                filename = item['name_slug']
+        nlpdir = self.bnGetConfigInfo(config_file, "confset_section", "nlp_dir")
+        if not os.path.exists(nlpdir):
+            print ">> Creating nlpdir Directory ", nlpdir
+            os.mkdir(nlpdir)
+        else:
+            logging.debug(">> Directory %s exists. ", nlpdir)
 
-            # If it is indexable file, download it and generate index.
-            if isFileTextractable(bn, filename):
+        token_file = nlpdir + "/" + "token_file"
+        sents_file = nlpdir + "/" + "sents_file"
+        post_file = nlpdir + "/" + "post_file"
+        of = open(token_file,"a")
+        of_sents = open(sents_file,"a")
+        of_post = open(post_file,"a")
+
+        ## print("Index-dbg2:bnlpDnldRepo:iterating within root_dir_list:{}, \
+        ##                     new_path:{} ".format(root_dir_list, new_path)
+        for item in root_dir_list:
+            if item['isdir'] == True:
+                logging.debug("bnlpDnldRepo: D1:It is a Directory %s", \
+                                            str(item['name']))
+                if item['name'] == '.' or item['name'] == '..':
+                    continue
+
+                if new_path == None:
+                   ## print "Index-dbg1:root_path is None.Name: ", item['name']
+                   continue
+
+                new_path = new_path + '/'+ str(item['name'])
 
                 dfxml_file = image_path + "_dfxml.xml"
-                # We will use the 'real' file name while looking for it in dfxml file
-                new_file_path = bnlpGetPathFromDfxml(item['name'], dfxml_file)
 
-                # If there is space in the file-name, replace it by %20
-                new_file_path = new_file_path.replace(" ", "%20")
+                new_path = self.bnlpGetPathFromDfxml(str(item['name']), \
+                                                   dfxml_file)
+                ## print("D: bnlpDnldRepo: path from Dfxml file: ", new_path)
+                if new_path == None:
+                   ## print "Index-debug1: Path for file {} is not found in \
+                   ##                    DFXML".format(dfxml_file)
+                   continue
+                # We will add image_index to the path so we can later
+                # extract the image name to be displayed. We could have
+                # passed the image name itself, instead of the index, but
+                # if the image name has special characters, we might bump
+                # into unexpected errors while creating files/directories
+                # with an unknown string. So chose to use the image
+                # index here and later extract the corresponding image name.
 
-                file_extract_dir = bnGetConfigInfo(config_file, "confset_section", \
-                                  "file_staging_directory")
-                file_path = file_extract_dir + "/" + str(image_index) + "/" + \
-                                          str(new_file_path)
-                ## print("D: bnlpDnldRepo: Calling bnlpDnldSingleFile function for path: ", file_path)
+                file_extract_dir = self.bnGetConfigInfo(config_file, \
+                      "confset_section", "file_staging_directory")
+                directory_path = os.getcwd() + "/" + \
+                        file_extract_dir+"/"+str(image_index) +"/"+new_path
 
-                ## print (">> Index-debug1: Indexing Image:{}-{}, File: {}".format(img,\
-                                  ## partnum, file_path))
-                bnlpDnldSingleFile(item, fs, file_path, file_extract_dir)
-
-
-                ## print "D: Downloaded single file: ", file_path
-                if filename.endswith('.txt') or filename.endswith('.TXT'):
-                    with open(file_path, 'r') as tempfile:
-                        #input_file_contents = tempfile.read().replace('\n', '')
-                        input_file_contents = tempfile.read()
-        
-                else:
-                    ##print("Filename {} is not a txt file. So textracting".format(filename)) 
-                    fn, filetype = os.path.splitext(filename)
-                    if filetype in bn.exc_fmt_list:
-                        logging.debug("bnlpDnldRepo: File type %s excluded", filetype)
-                        continue
-                    logging.debug("Filename %s is not a txt file. So textracting", 
-                                        filename) 
+                if not os.path.exists(directory_path):
+                    cmd = "mkdir " + re.escape(directory_path)
+                    ## print("bnlpDnldRepo:Creating directry with cmd: ", cmd)
                     try:
-                        input_file_contents = textract.process(file_path) 
-                        #logging.debug("bnlpDnldRepo: File contents of \
-                              # {}: {} ".format(filename, input_file_contents)) 
-                    except:
-                        print("\n >>> textract failed for doc {} ".format(file_path))
-                        continue
+                        shelloutput = subprocess.check_output(cmd, shell=True)
+                    except subprocess.CalledProcessError as cmdexcept:
+                        logging.debug('Error return code: %s ', \
+                                     cmdexcept.returncode)
+                        logging.debug('Error output: %s ', \
+                                     cmdexcept.output)
+                    ## print("D2: Created directory {}".format(directory_path))
 
-                # Text file is created. Now apply NLP features
-                img_file = img + ':'+filename
+                # Generate the file-list under this directory
+                new_filelist_root, fs = self.bnlpGenFileList(image_path, \
+                       image_index, partnum, new_path)
 
-                # FIXME: Commented out the following as these aren't needed for
-                # topic modeling code. Clean them up while testing 
-                # the plot feature.
-
-                ##logging.debug("Calling bnDoNlp for imgfile: %s ", img_file)
-                ##bnDoNlp(input_file_contents, "spacy", parse_en, img_file, of, of_sents, of_post)
-                ##ent = bn_plot.ParseForEnts()
-
-                # Add this filename and image to the image_list and document_list 
-                # to get the image_id and doc_id for the plot
-                ###img_id, doc_id = ent.getIdsForPlot(img, filename)
-                
-                #ent.bcnlpProcessSingleFile(file_path, bg=False)
-                entity_list = None
-                if ent != None:
-                    entity_list = ent.bnParseConfigFileForEnts(config_file)
-                
-                '''
-                try:
-                    utf_text = unicode(input_file_contents, "utf-8")
-                except:
-                    print "UTF Exception. Sending text as is"
-                    utf_text = input_file_contents
-                '''
-
-                try:
-                    ent.bcnlpProcessText(img, filename, unicode(input_file_contents, "utf-8"), entity_list, parse_en, bg=False)
-                except:
+                # if file_list is None, continue
+                if new_filelist_root == None:
+                    ## print "Index-dbg1:GetFileList retd Null filelist_root \
+                    ##          for Image Path {}, partnum {}, new_path: \
+                    ##          {}".format(image_path, partnum, new_path)
                     continue
-                #ent.bcnlpProcessText(img, filename, utf_text, entity_list, 
-                                  # parse_en, bg=False)
 
+                # Call the function recursively
+                logging.debug("bnlpDnldRepo: D2: Calling func recursively \
+                               with item-name: %s new_path:%s item: %s",  \
+                               item['name'], new_path, item)
+                foo = BnFilextract()
+                foo.bnlpDnldRepo(img, new_filelist_root, fs, \
+                        image_index, partnum, image_path, new_path, \
+                        parse_en, ent, config_file)
+            else:
+                ## print("Index-dbg2:bnlpDnldRepo:It is a File", item['name'])
+                filename = item['name'] # FIXME: Test more to make \
+                                        # sure files with space work.
+                #if item['name_slug'] != "None" and item['inode'] == int(inode) :
+                if item['name_slug'] != "None" :
+
+                    # Strip the digits after the last "-" from filepath \
+                                       # to get inode
+                    #new_filepath, separater, inode = filepath.rpartition("-")
+                    ## print("D >> Found a slug name ", \
+                           # item['name'], item['name_slug'])
+                    filename = item['name_slug']
+
+                # If it is indexable file, download it and generate index.
+                if self.isFileTextractable(filename):
+
+                    dfxml_file = image_path + "_dfxml.xml"
+                    # We will use the 'real' file name while looking \
+                    # for it in dfxml file
+                    new_file_path = self.bnlpGetPathFromDfxml(item['name'], \
+                                      dfxml_file)
+
+                    # If there is space in the file-name, replace it by %20
+                    new_file_path = new_file_path.replace(" ", "%20")
+
+                    file_extract_dir = self.bnGetConfigInfo(config_file, \
+                            "confset_section", "file_staging_directory")
+                    file_path = file_extract_dir + "/" + str(image_index) + \
+                                            "/" + str(new_file_path)
+
+                    self.bnlpDnldSingleFile(item, fs, file_path, \
+                                                 file_extract_dir)
+
+                    ## print "D: Downloaded single file: ", file_path
+                    if filename.endswith('.txt') or filename.endswith('.TXT'):
+                        with open(file_path, 'r') as tempfile:
+                            #input_file_contents =
+                                #tempfile.read().replace('\n', '')
+                            input_file_contents = tempfile.read()
+
+                    else:
+                        ## print("Filename {} is not a txt file. So \
+                               ## textracting".format(filename))
+                        fn, filetype = os.path.splitext(filename)
+                        if filetype in self.exc_fmt_list:
+                            logging.debug("bnlpDnldRepo:File type %s excluded",\
+                                         filetype)
+                            continue
+                        logging.debug("Filename %s is not a txt file. So \
+                                       textracting", filename) 
+                        try:
+                            input_file_contents = textract.process(file_path)
+                            #logging.debug("bnlpDnldRepo: File contents of \
+                                  # %s %s ",filename, input_file_contents)
+                        except:
+                            print("\n >>> textract failed for doc {} ".format(\
+                                              file_path))
+                            continue
+
+                    # Text file is created. Now apply NLP features
+                    img_file = img + ':'+filename
+
+                    # FIXME: Commented out the following as these
+                    # aren't needed for topic modeling code.
+                    # Clean them up while testing the plot feature.
+    
+                    ##bnDoNlp(input_file_contents, "spacy", parse_en,
+                               ##img_file, of, of_sents, of_post)
+                    ##ent = bn_plot.ParseForEnts()
+    
+                    # Add this file and img to image_list and document_list
+                    # to get the image_id and doc_id for the plot
+                    ###img_id, doc_id = ent.getIdsForPlot(img, filename)
+                    #ent.bcnlpProcessSingleFile(file_path, bg=False)
+                    entity_list = None
+                    if ent != None:
+                        entity_list = ent.bnParseConfigFileForEnts(config_file)
+                    '''
+                    try:
+                        utf_text = unicode(input_file_contents, "utf-8")
+                    except:
+                        print "UTF Exception. Sending text as is"
+                        utf_text = input_file_contents
+                    '''
+
+                    try:
+                        ent.bcnlpProcessText(img, filename, \
+                           unicode(input_file_contents, "utf-8"), \
+                           entity_list, parse_en, bg=False)
+                    except:
+                        continue
+    def bnlpGetPathFromDfxml(self, in_filename, dfxmlfile):
+        """ In order to get the complete path of each file being indexed,
+            we use the information from the dfxml file. This routine looks
+            for the given file in the given dfxml file and returns the
+            <filename> info, whic happens to be the complete path.
+            NOTE: In case this process is contributing significantly
+            to the indexing time, we need to find a better way to get this info.
+        """
+        ##print("##D1: bnlpGetPathFromDfxml: in_filename: {}, \
+                            ##  dfxmlfile: {}".format(in_filename, dfxmlfile))
+
+        try:
+            tree = ET.parse( dfxmlfile )
+        except IOError, e:
+            print('Failure parsing DFXML file %s ', e)
+            # print "Failure Parsing %s: %s" % (dfxmlfile, e)
+
+        root = tree.getroot() # root node
+        for child in root:
+            if child.tag == "volume":
+                volume = child
+                for vchild in volume:
+                    if vchild.tag == "fileobject":
+                        fileobject = vchild
+                        for fo_child in fileobject:
+                            if fo_child.tag == 'filename':
+                                f_name = fo_child.text
+                                # if this is the filename, return the path.
+                                # "fielname" has the complete path in the
+                                # DFXML file.
+                                # Extract just the fiename to compare with
+                                base_filename = os.path.basename(f_name)
+                                ## print("D2: base_filename: {}, \
+                                  ##f_name: {}".format(base_filename, f_name))
+                                if in_filename == base_filename:
+                                    return f_name
+
+        return None
+
+    def bnlpDnldSingleFile(self, file_item, fs, filepath, index_dir):
+        """ While indexing we download every file in the image, index it
+            and remove. This routine does exactly that - gets the inode
+            of the file_item, calls the pytsk3 APs (open_meta, info.meta,
+            read_random) to get the handle for that file, extract the size
+            and read the data into a buffer. The buffer is copied into a
+            file, which rsides in the same path as it does wihtin the disk
+            image.
+        """
+        ## print(">> D1:Dnlding File: {}, file: {} ".\
+                    #format(file_item['name'], filepath))
+
+        f = fs.open_meta(inode=file_item['inode'])
+
+        # Read data and store it in a string
+        offset = 0
+        size = f.info.meta.size
+        BUFF_SIZE = 1024 * 1024
+
+        total_data = ""
+        while offset < size:
+            available_to_read = min(BUFF_SIZE, size - offset)
+            data = f.read_random(offset, available_to_read)
+            if not data:
+                # print("Done with reading")
+                break
+
+            offset += len(data)
+            total_data = total_data+data
+            ## print("D2: Length OF TOTAL DATA: ", len(total_data))
+
+        ## print("D2: Dumping the contents to filepath ", filepath)
+
+        with open(filepath, "w") as text_file:
+            text_file.write(total_data)
+
+        ## print ("D2: Time to index the file ", filepath)
+        basepath = os.path.dirname(filepath)
+    def bnGetConfigInfo(self, config_file, section_name, cfg_string):
+        ## print "GetConfigInfo: Getting ", cfg_string
+        config = ConfigObj(config_file)
+        section = config[section_name]
+        for key in section:
+            if key == cfg_string:
+                # found the string
+                return section[key]
+        else:
+            print "bnGetConfigInfo: Key not found in section ", section_name
+
+    def bnGetOutDirFromConfig(self, config_file):
+        config = ConfigObj(config_file)
+
+        file_extract_dir = "file_staging_directory"
+        config_section = config['confset_section']
+        for key in config_section:
+           #print (key, config_section[key])
+           if key == "file_staging_directory":
+               file_extract_dir = config_section[key]
+               return file_extract_dir
+               break
+        else:
+           print("file_staging_directory not in config file - using default\n")
+           return None
 
 """ FIXME: Clean these up while testing the plot feature.
 def bnDoNlp(contents, tool, parse_en, img_file, of, of_sents, of_post):
@@ -625,192 +809,3 @@ def bnDoNlp(contents, tool, parse_en, img_file, of, of_sents, of_post):
         bnSpacyGetPOSTagging(contents, post_file, parse_en, img_file, of_post)
         #
 """
-    
-
-# FIXME: If indexable it is also nlp'able - for now we will keep the name as is
-def isFileTextractable(bn, filename):
-    if (filename.endswith('.txt') or filename.endswith('.TXT') or  \
-        filename.endswith('.pdf') or filename.endswith('.PDF') or \
-        filename.endswith('.bnGetExFmtsFromConfigFilexml') or filename.endswith('.XML') or \
-        filename.endswith('.doc') or filename.endswith('.DOC') or \
-        filename.endswith('.htm') or filename.endswith('.HTM;1') or \
-        filename.endswith('.html') or filename.endswith('.HTML') or \
-        filename.endswith('.jpg') or filename.endswith('.JPG') ):
-
-        # if any of the above types are configured to be exluded, filter them out.
-        fn, fe = os.path.splitext(filename)
-        logging.debug("isFileTextratable:file:%s, exc_fmt_list: %s", \
-                                bn.exc_fmt_list, filename)
-        if fe in bn.exc_fmt_list:
-            logging.debug("isTextraxtable:File %s configured to be excluded",filename)
-            return False
-        return True
-    else:
-        return False
-
-def bnlpGetPathFromDfxml(in_filename, dfxmlfile):
-    """ In order to get the complete path of each file being indexed, we use'
-        the information from the dfxml file. This routine looks for the given file
-        in the given dfxml file and returns the <filename> info, whic happens
-        to be the complete path. 
-        NOTE: In case this process is contributing significantly
-        to the indexing time, we need to find a better way to get this info.
-    """
-    ##print("##D1: bnlpGetPathFromDfxml: in_filename: {}, \
-                        ##  dfxmlfile: {}".format(in_filename, dfxmlfile))
-
-    try:
-        tree = ET.parse( dfxmlfile )
-    except IOError, e:
-        print('Failure parsing DFXML file %s ', e)
-        # print "Failure Parsing %s: %s" % (dfxmlfile, e)
-
-    root = tree.getroot() # root node
-    for child in root:
-        if child.tag == "volume":
-            volume = child
-            for vchild in volume:
-                if vchild.tag == "fileobject":
-                    fileobject = vchild
-                    for fo_child in fileobject:
-                        if fo_child.tag == 'filename':
-                            f_name = fo_child.text
-                            # if this is the filename, return the path.
-                            # "fielname" has the complete path in the DFXML file.
-                            # Extract just the fiename to compare with 
-                            base_filename = os.path.basename(f_name)
-                            ## print("D2: base_filename: {}, \
-                              ##f_name: {}".format(base_filename, f_name)) 
-                            if in_filename == base_filename:
-                                return f_name
-
-    return None
-
-def bnlpDnldSingleFile(file_item, fs, filepath, index_dir):
-    """ While indexing we download every file in the image, index it and remove. This
-        routine does exactly that - gets the inode of the file_item, calls the
-        pytsk3 APs (open_meta, info.meta, read_random) to get the handle for that
-        file, extract the size and read the data into a buffer.
-        The buffer is copied into a file, which rsides in the same path as it does
-        wihtin the disk image.
-    """
-    ## print(">> D1:Dnlding File: {}, file: {} ".format(file_item['name'], filepath))
-
-    f = fs.open_meta(inode=file_item['inode'])
-
-    # Read data and store it in a string
-    offset = 0
-    size = f.info.meta.size
-    BUFF_SIZE = 1024 * 1024
-
-    total_data = ""
-    while offset < size:
-        available_to_read = min(BUFF_SIZE, size - offset)
-        data = f.read_random(offset, available_to_read)
-        if not data:
-            # print("Done with reading")
-            break
-
-        offset += len(data)
-        total_data = total_data+data
-        ## print("D2: Length OF TOTAL DATA: ", len(total_data))
-
-    ## print("D2: Dumping the contents to filepath ", filepath)
-
-    with open(filepath, "w") as text_file:
-        text_file.write(total_data)
-
-    ## print ("D2: Time to index the file ", filepath)
-    basepath = os.path.dirname(filepath)
-
-def bnGetConfigInfo(config_file, section_name, cfg_string):
-    ## print "GetConfigInfo: Getting ", cfg_string
-    config = ConfigObj(config_file)
-    section = config[section_name]
-    for key in section:
-        if key == cfg_string:
-            # found the string
-            return section[key]
-    else:
-        print "bnGetConfigInfo: Key not found in section ", section_name
-
-def bnGetOutDirFromConfig(config_file):
-    config = ConfigObj(config_file)
-
-    file_extract_dir = "file_staging_directory"
-    config_section = config['confset_section']
-    for key in config_section:
-       #print (key, config_section[key])
-       if key == "file_staging_directory":
-           file_extract_dir = config_section[key]
-           return file_extract_dir
-           break
-    else:
-       print "file_staging_directory not found in config file  using default\n"
-       return None
-
-
-def bnExtractFiles(bn, ent, image, image_index, parse_en, config_file):
-    logging.debug("Extracting files for image: %s, with config_file: %s "\
-                                                 , image, config_file)
-
-    config = ConfigObj(config_file)
-
-    # FIXME: Use bnGetConfigInfo instead
-    ##file_extract_dir = bnGetConfigInfo("confset_section", "file_staging_directory")
-    file_extract_dir = "file_staging_directory"
-    config_section = config['confset_section']
-    for key in config_section:
-       #print (key, config_section[key])
-       if key == "file_staging_directory":
-           file_extract_dir = config_section[key]
-           break
-    else:
-       print "file_staging_directory not found in config file  using default\n"
-    disk_image_dir = bnGetConfigInfo(config_file, "confset_section", "disk_image_dir")
-    ## print "Disk image: ", disk_image_dir
-    image_path = os.getcwd() + "/" + disk_image_dir + "/" + image
-    ## print "Image Path: ", image_path
-    
-           
-    file_extract_dir_path = os.getcwd() + '/'+ file_extract_dir
-    print "\n>> Files will be extracted in ", file_extract_dir_path
-
-    cmd = "mkdir " + file_extract_dir
-    if not os.path.exists(file_extract_dir):
-        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-    file_extract_dir_per_image = file_extract_dir + '/' + str(image_index)
-    cmd = "mkdir " + file_extract_dir_per_image
-    if not os.path.exists(file_extract_dir_per_image):
-        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-
-    # FIXME: For multipart image, find the numparts here
-    # partition_in[img] = bn.num_partitions  (just a placeholder)
-    # for now, num_partitions = 1
-    bn.num_partitions = bn.bnlpGetPartInfoForImage(image_path, image_index)
-    ## print "NUM of partitions: ", bn.num_partitions
-
-    # Generate dfxml file if doesn't exist
-    #file_extract_dir = bnGetConfigInfo("confset_section", "file_staging_directory")
-    dfxmlfile = image_path +"_dfxml.xml"
-    if not os.path.exists(dfxmlfile):
-        print(">> Generating dfxml file as it doesn't exist ".format(dfxmlfile))
-        bn.bnlpGenerateDfxml(image_path, dfxmlfile)
-
-    partition_in[image] = bn.num_partitions
-
-    root_dir = os.getcwd()
-
-    for p in range(0, bn.num_partitions):
-        # make the directory for this img and partition
-        part_dir = str(root_dir) + '/img'+str(image_index)+"_"+ str(p)
-        file_list_root, fs = bn.bnlpGenFileList(image_path, image_index,int(p), '/')
-
-        if file_list_root == None:
-            print "Error: File_list_root is None for image_path {} amd part {}".format(image_path, p)
-            continue
-        
-        bnlpDnldRepo(bn, image, file_list_root, fs, image_index, p, image_path, \
-                             '/', parse_en, ent, config_file)
-
-
