@@ -1,10 +1,10 @@
-# bitcurator-nlp-tools
+# bitcurator-nlp-gentm
 
-Preliminary code samples for BitCurator NLP. Build instructions and dependencies can be found in BUILD-NOTES.md. This project is in development.
+Generate topic models using open text automatically extracted from various file formats in disk iamges. This project is in development.
 
 ## Documentation
 
-The latest documentation can be found on the BitCurator Access wiki page at https://wiki.bitcurator.net/index.php?title=BitCurator_NLP.
+Additional project information can be found on the BitCurator Access wiki page at https://wiki.bitcurator.net/index.php?title=BitCurator_NLP.
 
 ## License(s)
 
