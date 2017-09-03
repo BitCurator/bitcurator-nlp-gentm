@@ -323,7 +323,7 @@ class BnFilextract:
         ## print('D: Fiwalk generated dfxml file. Fixing it up now ')
         # print("D: Fiwalk generated dfxml file. Fixing it up now ")
         #self.fixup_dfxmlfile(dfxmlfile)
-        dfxmlfile = self.fixup_dfxmlfile(dfxmlfile)
+        #dfxmlfile = self.fixup_dfxmlfile(dfxmlfile)
 
         return dfxmlfile
 
@@ -689,13 +689,13 @@ class BnFilextract:
 
         root = tree.getroot() # root node
         for child in root:
-            if child.tag == "volume":
+            if child.tag == "{http://www.forensicswiki.org/wiki/Category:Digital_Forensics_XML}volume":
                 volume = child
                 for vchild in volume:
-                    if vchild.tag == "fileobject":
+                    if vchild.tag == "{http://www.forensicswiki.org/wiki/Category:Digital_Forensics_XML}fileobject":
                         fileobject = vchild
                         for fo_child in fileobject:
-                            if fo_child.tag == 'filename':
+                            if fo_child.tag == '{http://www.forensicswiki.org/wiki/Category:Digital_Forensics_XML}filename':
                                 f_name = fo_child.text
                                 # if this is the filename, return the path.
                                 # "fielname" has the complete path in the
