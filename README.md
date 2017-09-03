@@ -8,7 +8,7 @@ The topic model generation tool depends on a number of external natural language
 
 To get started, follow the steps below:
 
-1. Clone the repository https://github.com/BitCurator/bitcurator-nlp-tools
+1. Clone the repository https://github.com/BitCurator/bitcurator-nlp-gentm
 
 2. Populate the config file, "bntm_config.txt" with the relevant images,
 in the section "image-section"
