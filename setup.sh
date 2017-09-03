@@ -255,37 +255,37 @@ complete_message() {
     echo
 }
 
-echo "Installing ubuntu 1604 deps...."
+echo "Installing core dependencies...."
 install_ubuntu_1604_deps
 
-echo "Installing ubuntu 1604 packages...."
+echo "Installing Ubuntu packages...."
 install_ubuntu_1604_packages stable
 
-echo "Installing ubuntu 1604 PIP packages...."
+echo "Installing pip packages...."
 install_ubuntu_1604_pip_packages stable
 
 echo "Installing source packages...."
 install_source_packages
 
-echo "current directory1: ${PWD} "
-echo "insalling textract prereq"
+# echo "current directory1: ${PWD} "
+echo "Installing textract support packages..."
 sudo apt-get install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 libpulse-dev sox swig swig3.0 libjpeg-dev zlib1g-dev
 
 
-echo "current directory2: ${PWD} "
-echo "insalling textract "
+# echo "current directory2: ${PWD} "
+echo "Installing textract..."
 sudo pip install textract
 
-echo "Installing graphlab"
+echo "Installing graphlab..."
 sudo pip install --upgrade --no-cache-dir https://get.graphlab.com/GraphLab-Create/2.1/sunita@live.unc.edu/0295-EBD3-1F14-E97A-7FA1-5421-EA06-209A/GraphLab-Create-License.tar.gz
 
-echo "Installing configObj"
+echo "Installing configObj..."
 pip install configobj
 
-echo "Installing gensim"
+echo "Installing gensim..."
 pip install gensim
 
-echo "Installing pyLDAvis"
+echo "Installing pyLDAvis..."
 pip install pyLDAvis
 
 # The following are needed for bn_plot
