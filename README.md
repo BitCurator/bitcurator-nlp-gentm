@@ -6,9 +6,9 @@ Generate topic models using open text automatically extracted from various file 
 
 The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu (currently tested in Ubuntu 16.04 and Ubuntu 17.04).
 
-To get started, follow the steps below in a clean Ubuntu host or VM:
+In a clean Ubuntu virtual machine, follow these steps:
 
-* Clone this repository:
+* Open a terminal and clone this repository:
 ```shell
 $ git clone https://github.com/bitcurator/bitcurator-nlp-gentm
 ```
