@@ -8,18 +8,34 @@ The topic model generation tool depends on a number of external natural language
 
 To get started, follow the steps below in a clean Ubuntu host or VM:
 
-1. Clone the repository https://github.com/BitCurator/bitcurator-nlp-gentm
+* Clone this repository:
+```shell
+$ git clone https://github.com/bitcurator/bitcurator-nlp-gentm
+```
 
-2. Populate the config file, "bntm_config.txt" with the relevant images,
-in the section "image-section"
+* Change directory into the repository:
+```shell
+$ cd bitcurator-nlp-gentm
+```
 
-3. Run the script provision/nlp_script to install packages like
-textract, graphlab, etc.
+* (Optional) Update the configuration file.
+A prebuilt configuration file, "bntm_config.txt" includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
 
-4. Run the script "python bcnlp_tm.py" to perform text extraction, execute the graphlab topic modeling tool, and load the results into a browser window.
+* Run the setup shell script to install and configure the required software (various forensics tools, textract, graphlab, etc).
+```shell
+$ sudo ./setup.sh
+```
 
-Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>]
-Default topics = 10, tm=graphlab
+* Run the following command to extract text from the configured file types, start the graphlab topic modeling tool, and load the results into a browser window.
+```shell
+$ python bcnlp_tm.py
+```
+
+* Additional usage notes
+Additional adjustments can be performed with command-line flags, specifically to adjust the number of default topics and topic modeling output. Defaults are "10" and "graphlab".
+```shell
+$ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>]
+```
 
 ## Documentation
 
