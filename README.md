@@ -33,9 +33,10 @@ A prebuilt configuration file, "bntm_config.txt" includes a single sample image 
 $ sudo ./setup.sh
 ```
 
-* If your Ubuntu environment does not already have a desktop (graphic UI), you will need to install one. E.g.
+* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one. E.g.
 
 ```shell
+$ sudo apt-get update
 $ sudo apt-get install ubuntu-desktop
 ```
 
