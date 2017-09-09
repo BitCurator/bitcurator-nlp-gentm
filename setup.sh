@@ -37,7 +37,7 @@ __pip_install_noinput() {
     #pip install --upgrade "$@"; return $?
     # Uncomment for Python 3
     #pip3 install --upgrade $@; return $?
-    pip install --upgrade $@; return $?
+    pip2 install --upgrade $@; return $?
 }
 #---  FUNCTION  ----------------------------------------------------------------
 #          NAME:  __pip_install_noinput
@@ -47,7 +47,7 @@ __pip_pre_install_noinput() {
     #pip install --pre --upgrade "$@"; return $?
     # Uncomment for Python 3
     #pip3 install --pre --upgrade $@; return $?
-    pip install --pre --upgrade $@; return $?
+    pip2 install --pre --upgrade $@; return $?
 }
 
 install_ubuntu_1604_deps() {
