@@ -1,6 +1,6 @@
 # bitcurator-nlp-gentm
 
-Generate topic models using open text automatically extracted from various file formats in disk iamges. This project is in development.
+Generate topic models using open text automatically extracted from various file formats in disk images. This project is in development.
 
 ## Building and running
 
@@ -33,15 +33,29 @@ A prebuilt configuration file, "bntm_config.txt" includes a single sample image 
 $ sudo ./setup.sh
 ```
 
-* Run the following command to extract text from the configured file types, start the graphlab topic modeling tool, and load the results into a browser window.
+* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one. E.g.
+
+```shell
+$ sudo apt-get update
+$ sudo apt-get install ubuntu-desktop
+```
+
+* Run the following command to extract text from the configured file types, start the topic modeling tool, and load the results into a browser window.
 ```shell
 $ python bcnlp_tm.py
 ```
 
 * Additional usage notes
-Additional adjustments can be performed with command-line flags, specifically to adjust the number of default topics and topic modeling output. Defaults are "10" and "graphlab".
+
+Additional adjustments can be performed with command-line flags.
+* --topics: number of topics (default 10)
+* --tm: topic modeling tool (default graphlab). Options are gensim or graphlab
+* --infile: file source: if the --infile option is not used, the disc image(s) listed in the configuration 
+file will be extracted. Use --infile to specify a directory instead.
+* --config: configuration file (default bntm_config.txt in main directory) - specify file path for alternate configuration file
+
 ```shell
-$ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>]
+$ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile </directory/path>] [--config </path/to/config-file/>] 
 ```
 
 ## Documentation
