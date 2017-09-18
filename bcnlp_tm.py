@@ -30,7 +30,9 @@ try:
 except ImportError:
     raise ImportError("This script requires ArgumentParser which is in Python 2.7 or Python 3.0")
 
-logging.basicConfig(filename= 'bcnlp_tm.log', level=logging.DEBUG)
+#logging.basicConfig(filename= 'bcnlp_tm.log', level=logging.DEBUG)
+logging.basicConfig(filename= 'bcnlp_tm_info.log', level=logging.INFO)
+logging.basicConfig(filename= 'bcnlp_tm_debug.log', level=logging.DEBUG)
 
 
 cfg_image = {}
@@ -136,6 +138,14 @@ class BnTopicModel():
         print("Graphlab: Launching graphics ")
         pyLDAvis.show(vis_data)
 
+    def remove_punctuation(self, text):
+        import string
+        return text.translate(None, string.punctuation)
+
+    def remove_digits(self, text):
+        import string
+        return text.translate(None, string.digits)
+
     def bnGenerateSArray(self, filextract_dir):
         ''' Traverse through the files in a directory and create sArrays 
             and append them into one single sArray.
@@ -177,14 +187,23 @@ class BnTopicModel():
                     '''
                     print("Filename {} is not a txt file. So textracting".\
                            format(filename)) 
-                    input_file_contents = textract.process(file_path) 
+                    try:
+                        input_file_contents = textract.process(file_path)
+                    except textract.exceptions.ShellError as e:
+                        logging.info("Textract failed for file %s, error: %s",\
+                                filename, e)
+                        continue
+
+                    input_file_contents = self.remove_punctuation(input_file_contents)
+                    input_file_contents = self.remove_digits(input_file_contents)
+                    logging.info("Removed puctuations from file %s ", filename)
                     file_path = os.path.splitext(file_path)[0]+'.txt'
                     print ("bnGenerateSArray: writing contents to outfile: ", 
                                          file_path) 
                     with open(file_path, "w") as text_file:
                         text_file.write(input_file_contents)
 
-                logging.debug(">>> Getting SArray for file %s ", file_path)
+                logging.info(">>> Getting SArray for file %s ", file_path)
                 sa_sub = gl.SArray(file_path)
                 gl.text_analytics.trim_rare_words(sa_sub, threshold=2, stopwords=sw_list )
                 # Now append the sub-sarray to the main one.
@@ -200,7 +219,7 @@ class BnTopicModel():
 def bn_parse_config_file(config_file, section_name):
     ''' Parses the config file to extract the image names and entity list.
     '''
-    logging.debug("bn_parse_config_file: Section: %s ", section_name) 
+    logging.info("bn_parse_config_file: Section: %s ", section_name)
     config = ConfigObj(config_file)
     section = config[section_name]
     i = 0
@@ -210,7 +229,7 @@ def bn_parse_config_file(config_file, section_name):
             # found the string
             #return section[key]
         if section_name == "image_section":
-            logging.debug("parse_config: key: %s, section: %s", \
+            logging.info("parse_config: key: %s, section: %s", \
                             key, section[key])
             cfg_image[i] = key
             i+=1
@@ -281,23 +300,19 @@ if __name__ == "__main__":
     if infile == None:
         is_disk_image = True
 
-        bn.exc_fmt_list = bn.bnGetExFmtsFromConfigFile(config_file)
-        print("Excluded formats in config file: ", bn.exc_fmt_list)
-        # No input directory specified. Look for config file for disk images
-
         bn_parse_config_file(config_file, "image_section")
         print(">> Images in the config file: ", cfg_image)
 
         i = 0
         for img in cfg_image:
-            print(">> Extracting files from image {} ...".format(cfg_image[img]))
+            print(">> Extracting files from image {}...".format(cfg_image[img]))
             bn.bnExtractFiles(None, cfg_image[img], i, None, config_file)
             i += 1
         print(">> ... Done ")
 
     else:
         print(">> Extracting files from ", infile)
-        bn.bn_traverse_infile_dir(infile, documents)
+        bn.bn_traverse_infile_dir(infile, documents, config_file)
 
     tmc = BnTopicModel()
     if tm == 'gensim':
@@ -306,12 +321,12 @@ if __name__ == "__main__":
         if is_disk_image:
             indir = bn.bnGetOutDirFromConfig(config_file)
             print(">> Generating graphlab for images in disk image")
-            logging.debug(">> Generating graphlab for images in disk image")
-            logging.debug("File-extracted directory: %s ", indir)
+            logging.info(">> Generating graphlab for images in disk image")
+            logging.info("File-extracted directory: %s ", indir)
             tmc.tm_generate_graphlab(indir, num_topics)
         else:
             print(">> Generating graphlab for files in ", infile)
-            logging.debug(">> Generating graphlab for files in %s", infile)
+            logging.info(">> Generating graphlab for files in %s", infile)
             tmc.tm_generate_graphlab(infile, num_topics)
 
 
