@@ -5,9 +5,12 @@
 [image_section]
 #charlie-work-usb-2009-12-11.E01 = 1
 #terry-work-usb-2009-12-11.E01 = 1
-#terry-work-usb-2009-12-11.E01 = 1
 #dup_charlie.E01 = 1
 #jo-favorites-usb-2009-12-11.E01 = 1
+#terry-work-usb-2009-12-11.E01 = 1
+#jo-work-usb-2009-12-11.E01 = 1
+#jo-2009-11-12.E01 = 1
+#RedUsbNew.E01 = 1
 uncusb.E01 = 1
 uncusbnew.E01 = 1
 
@@ -16,6 +19,7 @@ disk_image_dir = "disk-images"
 file_staging_directory = "filextract_dir"
 nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
+entity_info = "No"
 
 [exclude_format_section]
 .jpg=1
