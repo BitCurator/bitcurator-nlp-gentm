@@ -33,6 +33,7 @@ except ImportError:
 #logging.basicConfig(filename= 'bcnlp_tm.log', level=logging.DEBUG)
 logging.basicConfig(filename= 'bcnlp_tm_info.log', level=logging.INFO)
 logging.basicConfig(filename= 'bcnlp_tm_debug.log', level=logging.DEBUG)
+logging.basicConfig(filename= 'bcnlp_tm_warning.log', level=logging.WARNING)
 
 
 cfg_image = {}
@@ -268,8 +269,9 @@ def bnTraverseInfileDir(filextract_dir):
         
 if __name__ == "__main__":
     parser = ArgumentParser(prog='bn_gensim.py', description='Topic modeling')
-    parser.add_argument('--config', action='store', help="... ")
-    parser.add_argument('--infile', action='store', help="... ")
+    parser.add_argument('--config', action='store', \
+                                  help="Config file[bntm_config.txt] ")
+    parser.add_argument('--infile', action='store', help="input directory ")
     parser.add_argument('--tm', action='store',  \
                          help="topic modeling :gensim/graphlab ")
     parser.add_argument('--topics', action='store', help="number of topics ")
