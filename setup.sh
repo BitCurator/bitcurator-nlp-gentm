@@ -81,12 +81,14 @@ gcc-5
 lame
 libffi-dev
 libjpeg-dev
+liblzma-dev
 libmad0
 libpulse-dev
 libsox-fmt-mp3
 libtool
 libxml2-dev
 libxslt1-dev
+lzma
 poppler-utils
 pstotext
 python
@@ -292,5 +294,10 @@ pip install pyLDAvis
 pip install matplotlib
 pip install spacy
 python -m spacy download en
+
+echo "Installing dfvfs..."
+curl -O https://raw.githubusercontent.com/log2timeline/dfvfs/master/requirements.txt
+pip install -r requirements.txt
+pip install dfvfs
 
 complete_message
