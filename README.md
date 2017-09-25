@@ -28,12 +28,12 @@ $ cd bitcurator-nlp-gentm
 * (Optional) Update the configuration file.
 A prebuilt configuration file, "bntm_config.txt" includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
 
-* Run the setup shell script to install and configure the required software (various forensics tools, textract, graphlab, etc).
+* Run the setup shell script to install and configure the required software (various forensics tools, textract, graphlab, etc). Note that this may take some time (30 or more minutes).
 ```shell
 $ sudo ./setup.sh
 ```
 
-* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one. E.g.
+* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
 
 ```shell
 $ sudo apt-get update
@@ -44,6 +44,8 @@ $ sudo apt-get install ubuntu-desktop
 ```shell
 $ python bcnlp_tm.py
 ```
+
+* The results based on the text extracted from your specified file types and processed using pyLDAvis will appear automatically in a browser window. When finished viewing, you can terminate the server in the existing terminal by typing "Cntrl-X" followed by "Cntrl-C".
 
 * Additional usage notes
 
