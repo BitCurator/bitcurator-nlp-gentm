@@ -73,6 +73,7 @@ install_ubuntu_1604_deps() {
 install_ubuntu_1604_packages() {
     packages="antiword
 automake
+curl
 dkms
 ffmpeg
 flac
