@@ -2,18 +2,12 @@
 # bitcurator NLP topic modeling config file
 #
 
+# Disk images to process in the "disk-images" directory
 [image_section]
-#charlie-work-usb-2009-12-11.E01 = 1
-#terry-work-usb-2009-12-11.E01 = 1
-#dup_charlie.E01 = 1
-#jo-favorites-usb-2009-12-11.E01 = 1
-#terry-work-usb-2009-12-11.E01 = 1
-#jo-work-usb-2009-12-11.E01 = 1
-#jo-2009-11-12.E01 = 1
-#RedUsbNew.E01 = 1
 uncusb.E01 = 1
 uncusbnew.E01 = 1
 
+# Configuration settings. Where to find disk images and store intermediary files.
 [confset_section]
 disk_image_dir = "disk-images"
 file_staging_directory = "filextract_dir"
@@ -21,12 +15,14 @@ nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
 entity_info = "No"
 
+# Formats to exclude when extracting text using textract
 [exclude_format_section]
 .jpg=1
 .JPG=1
 .mp3=1
 .wav=1
 
+# Entity selections. Legacy - ignored in current release.
 [entity_list_section]
 person=1
 norp=1
