@@ -27,6 +27,7 @@ from subprocess import Popen,PIPE
 import textract
 import logging
 from bcnlp_listfiles import FileEntryLister
+from bcnlp_fxtract import FileExtractor
 
 # FIXME: The following is needed only for bn_plot : See how it can be 
 # selectively imported
@@ -72,7 +73,6 @@ class BnFilextract:
     part_array = ["image_path", "addr", "slot_num", "start_offset", "desc"]
     partDictList = []
     num_partitions_ofimg = dict()
-  
 
     def bnlpGetFsForImage(self, image_path, image_index, partition_num):
         """ Gets the filesystem info for an image and partition,
@@ -273,15 +273,40 @@ class BnFilextract:
         self.num_partitions = \
             self.bnlpGetPartInfoForImage(image_path, image_index)
 
+        '''
         # Call Dfvfs method to generate the file-list in the image
         self.num_partitions = self.bnDfvfsGenerateFileList(image_path)
         partition_in[image] = self.num_partitions
+        '''
 
         logging.info("%s: # partitions:%s Generating filelist ", fname, \
                                               self.num_partitions)
 
         logging.info("%s: Generated filelist. Extract contents", fname)
 
+        file_entry_lister = FileEntryLister()
+        output_path = file_extract_dir_per_image
+        base_path_spec = file_entry_lister.GetBasePathSpec(image_path)
+
+        #file_entry = resolver.Resolver.OpenFileEntry(base_path_spec)
+        file_entry = file_entry_lister.GetFileEntry(base_path_spec)
+
+        fe = FileExtractor(base_path_spec, output_path)
+        fe.start()
+        fe.AddFileToQueue(file_entry, image_path)
+
+        #fe.Finish()
+        print("[{}]: Jobs: {}".format(fname, fe.jobs))
+
+        for job in fe.jobs:
+            job.join()
+        fe.Finish()
+
+        print(">> Files extractd for the image {} at {}".format(image, file_extract_dir_per_image)) 
+
+        '''
+        # NOTE: Original code - to be removed after testing with new
+        # file-extraction code.
         for p in range(0, self.num_partitions):
             logging.info("%s: Extracting contents from part p = %s", fname, p)
             listfile = image_path + "_filelist" + "_p" + str(p+1)
@@ -341,6 +366,7 @@ class BnFilextract:
                     else:
                         logging.info("%s: File not textractable:%s ",\
                                                   fname, filename)
+        '''
                   
                     
     def isFileTextractable(self, filename, config_file):
