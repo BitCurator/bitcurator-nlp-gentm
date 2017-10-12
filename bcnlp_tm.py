@@ -169,6 +169,8 @@ class BnTopicModel():
             for filename in files:
                 print(len(path) * '---', filename)
                 file_path = '/'.join(path) + '/' + filename
+                if "Volume Label Entry" in filename:
+                    continue
 
                 # If filename is not a text file, convert it
                 if not (filename.endswith('.txt') or filename.endswith('.TXT')):
@@ -190,7 +192,7 @@ class BnTopicModel():
                            format(filename)) 
                     try:
                         input_file_contents = textract.process(file_path)
-                    except textract.exceptions.ShellError as e:
+                    except (textract.exceptions.ShellError, textract.exceptions.ExtensionNotSupported) as e:
                         logging.info("Textract failed for file %s, error: %s",\
                                 filename, e)
                         continue
