@@ -77,9 +77,85 @@ class FileEntryLister(object):
     return u'{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
-  def _GetNextLevelTSKPartionVolumeSystemPathSpec(self, \
-                                                  source_path_spec,\
-                                                  spath):
+  def _GetNextLevelTSKPartionVolumeSystemPathSpec(self, source_path_spec):
+    """Determines the next level volume system path specification.
+
+    Args:
+      source_path_spec: the source path specification (instance of
+                        dfvfs.PathSpec).
+
+    Returns:
+      The next level volume system path specification (instance of
+      dfvfs.PathSpec).
+
+    Raises:
+      RuntimeError: if the format of or within the source is not supported.
+    """
+    volume_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
+        parent=source_path_spec)
+
+    volume_system = tsk_volume_system.TSKVolumeSystem()
+    volume_system.Open(volume_system_path_spec)
+
+    volume_identifiers = []
+    for volume in volume_system.volumes:
+      volume_identifier = getattr(volume, 'identifier', None)
+      if volume_identifier:
+        volume_identifiers.append(volume_identifier)
+
+    if not volume_identifiers:
+      logging.warning(u'No supported partitions found.')
+      return source_path_spec
+
+    if len(volume_identifiers) == 1:
+      return path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
+          parent=source_path_spec)
+
+    print(u'The following partitions were found:')
+    print(u'Identifier\tOffset\t\t\tSize')
+
+    for volume_identifier in sorted(volume_identifiers):
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise RuntimeError(
+            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
+
+      volume_extent = volume.extents[0]
+      print(
+          u'{0:s}\t\t{1:d} (0x{1:08x})\t{2:s}'.format(
+              volume.identifier, volume_extent.offset,
+              self._GetHumanReadableSize(volume_extent.size)))
+
+    print(u'')
+
+    while True:
+      print(
+          u'Please specify the identifier of the partition that should '
+          u'be processed:')
+
+      selected_volume_identifier = sys.stdin.readline()
+      selected_volume_identifier = selected_volume_identifier.strip()
+
+      if selected_volume_identifier in volume_identifiers:
+        break
+
+      print(u'')
+      print(
+          u'Unsupported partition identifier, please try again or abort '
+          u'with Ctrl^C.')
+      print(u'')
+
+    location = u'/{0:s}'.format(selected_volume_identifier)
+
+    return path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK_PARTITION, location=location,
+        parent=source_path_spec)
+
+  def _GetNextLevelTSKPartionVolumeSystemPathSpecForBcnlp(self, \
+                                                          source_path_spec,\
+                                                          spath):
     """Determines the next level volume system path specification.
        and calls ListFileEntry to output the file-list from every
        partition into the specified output file.
@@ -170,7 +246,47 @@ class FileEntryLister(object):
     # TODO: implement.
     return source_path_spec
 
-  def _GetUpperLevelVolumeSystemPathSpec(self, source_path_spec, spath):
+  def _GetUpperLevelVolumeSystemPathSpec(self, source_path_spec):
+    """Determines the upper level volume system path specification.
+
+    Args:
+      source_path_spec: the source path specification (instance of
+                        dfvfs.PathSpec).
+
+    Returns:
+      The upper level volume system path specification (instance of
+      dfvfs.PathSpec).
+
+    Raises:
+      RuntimeError: if the format of or within the source is not supported.
+    """
+    type_indicators = analyzer.Analyzer.GetVolumeSystemTypeIndicators(
+        source_path_spec)
+
+    if not type_indicators:
+      # No supported volume system found, we are at the upper level.
+      return source_path_spec
+
+    if len(type_indicators) > 1:
+      raise RuntimeError(
+          u'Unsupported source found more than one volume system types.')
+
+    if type_indicators[0] == definitions.TYPE_INDICATOR_TSK_PARTITION:
+      path_spec = self._GetNextLevelTSKPartionVolumeSystemPathSpec(
+          source_path_spec)
+
+    elif type_indicators[0] == definitions.TYPE_INDICATOR_VSHADOW:
+      path_spec = self._GetNextLevelVshadowVolumeSystemPathSpec(
+          source_path_spec)
+
+    else:
+      raise RuntimeError((
+          u'Unsupported source found unsupported volume system '
+          u'type: {0:s}.').format(type_indicators[0]))
+
+    return path_spec
+
+  def _GetUpperLevelVolumeSystemPathSpecForBcnlp(self, source_path_spec, spath):
     """Determines the upper level volume system path specification,
        then calls methods to lsit files from all partitions into the
        specified file.
@@ -198,7 +314,7 @@ class FileEntryLister(object):
           u'Unsupported source found more than one volume system types.')
 
     if type_indicators[0] == definitions.TYPE_INDICATOR_TSK_PARTITION:
-      partitions = self._GetNextLevelTSKPartionVolumeSystemPathSpec(
+      partitions = self._GetNextLevelTSKPartionVolumeSystemPathSpecForBcnlp(
           source_path_spec, spath)
 
     elif type_indicators[0] == definitions.TYPE_INDICATOR_VSHADOW:
@@ -284,6 +400,98 @@ class FileEntryLister(object):
     logging.info("Inode: for file %s = %s ",file_path, stat_object.ino)
     return(stat_object.ino)
 
+  def GetBasePathSpec(self, source_path):
+    """Determines the base path specification.
+
+    Args:
+      source_path: the source path.
+
+    Returns:
+      The base path specification (instance of dfvfs.PathSpec).
+
+    Raises:
+      RuntimeError: if the source path does not exists, or if the source path
+                    is not a file or directory, or if the format of or within
+                    the source file is not supported.
+    """
+    if not os.path.exists(source_path):
+      raise RuntimeError(u'No such source: {0:s}.'.format(source_path))
+
+    stat_info = os.stat(source_path)
+
+    if (not stat.S_ISDIR(stat_info.st_mode) and
+        not stat.S_ISREG(stat_info.st_mode)):
+      raise RuntimeError(
+          u'Unsupported source: {0:s} not a file or directory.'.format(
+              source_path))
+
+    if stat.S_ISDIR(stat_info.st_mode):
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=source_path)
+
+    elif stat.S_ISREG(stat_info.st_mode):
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=source_path)
+
+      type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
+          path_spec)
+
+      if len(type_indicators) > 1:
+        raise RuntimeError((
+            u'Unsupported source: {0:s} found more than one storage media '
+            u'image types.').format(source_path))
+
+      if len(type_indicators) == 1:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            type_indicators[0], parent=path_spec)
+
+      if not type_indicators:
+        # The RAW storage media image type cannot be detected based on
+        # a signature so we try to detect it based on common file naming
+        # schemas.
+        file_system = resolver.Resolver.OpenFileSystem(path_spec)
+        raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_RAW, parent=path_spec)
+
+        glob_results = raw.RawGlobPathSpec(file_system, raw_path_spec)
+        if glob_results:
+          path_spec = raw_path_spec
+
+      # In case we did not find a storage media image type we keep looking
+      # since not all RAW storage media image naming schemas are known and
+      # its type can only detected by its content.
+
+      path_spec = self._GetUpperLevelVolumeSystemPathSpec(path_spec)
+
+      # In case we did not find a volume system type we keep looking
+      # since we could be dealing with a store media image that contains
+      # a single volume.
+
+      type_indicators = analyzer.Analyzer.GetFileSystemTypeIndicators(
+          path_spec)
+
+      if len(type_indicators) > 1:
+        raise RuntimeError((
+            u'Unsupported source: {0:s} found more than one file system '
+            u'types.').format(source_path))
+
+      if not type_indicators:
+        logging.warning(u'Unable to find a supported file system.')
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_OS, location=source_path)
+
+      elif type_indicators[0] != definitions.TYPE_INDICATOR_TSK:
+        raise RuntimeError((
+            u'Unsupported source: {0:s} found unsupported file system '
+            u'type: {1:s}.').format(source_path, type_indicators[0]))
+
+      else:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK, location=u'/',
+            parent=path_spec)
+
+    return path_spec
+
   def ListAllFiles(self, source_path):
     """Determines the base path specification and lists all the files
        per partition, in the given disk image file, into text files
@@ -350,10 +558,12 @@ class FileEntryLister(object):
       # since not all RAW storage media image naming schemas are known and
       # its type can only detected by its content.
 
-      partitions = self._GetUpperLevelVolumeSystemPathSpec(path_spec,\
+      partitions = self._GetUpperLevelVolumeSystemPathSpecForBcnlp(path_spec,\
                                               source_path)
 
     return partitions
+  def GetFileEntry(self, base_path_spec):
+    return resolver.Resolver.OpenFileEntry(base_path_spec)
 
 
 class StdoutWriter(object):
