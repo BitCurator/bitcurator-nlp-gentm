@@ -41,16 +41,11 @@ class FileExtractor(multiprocessing.Process):
 
         self.fs_path_spec = fs_path_spec
         self.output_path = output_path
-        self.jobs = []
 
     def run(self):
         p = os.getpid()
         print(u"Running File Extractor: (PID {})".format(p))
         
-        print("[REMOVE]PID: ", p)
-        self.jobs.append(p)
-        print("[REMOVE]Jobs: ", self.jobs)
-
         # We have to open the filesystem from within the process, cannot
         # be passed
         resolver_context = context.Context()
@@ -241,7 +236,6 @@ class FileExtractor(multiprocessing.Process):
 
     #def AddFileToQueue(self,tsk_file_entry):
     def AddFileToQueue(self,tsk_file_entry, full_path):
-        print("REMOVE-AddFileToQueue jobs: ", self.jobs)
         ''' ORIG
         einfo = ExtractionInfo(
             tsk_file_entry.path_spec,
@@ -256,7 +250,6 @@ class FileExtractor(multiprocessing.Process):
 
     def Finish(self):
         self.file_queue.put(u'TERMINATE')
-        print ("[REMOVE] Finish: Jobs: ", self.jobs) 
 
 class ExtractionInfo():
     def __init__(self,path_spec,full_path):
@@ -333,3 +326,4 @@ if __name__ == "__main__":
     
 
     
+#!/usr/bin/python
