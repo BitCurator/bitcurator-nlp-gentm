@@ -239,6 +239,7 @@ class BnFilextract:
         fname = sys._getframe().f_code.co_name
         logging.info("%s: Extracting files for img: %s, with config_file: %s ",\
                                                  fname, image, config_file)
+        jobs = []
 
         config = ConfigObj(config_file)
         exc_fmt_list = self.bnGetExFmtsFromConfigFile(config_file)
@@ -288,87 +289,21 @@ class BnFilextract:
         output_path = file_extract_dir_per_image
         base_path_spec = file_entry_lister.GetBasePathSpec(image_path)
 
-        #file_entry = resolver.Resolver.OpenFileEntry(base_path_spec)
         file_entry = file_entry_lister.GetFileEntry(base_path_spec)
 
         fe = FileExtractor(base_path_spec, output_path)
+        jobs.append(fe)
         fe.start()
         fe.AddFileToQueue(file_entry, image_path)
 
-        #fe.Finish()
-        print("[{}]: Jobs: {}".format(fname, fe.jobs))
-
-        for job in fe.jobs:
-            job.join()
         fe.Finish()
 
-        print(">> Files extractd for the image {} at {}".format(image, file_extract_dir_per_image)) 
+        for job in jobs:
+            job.join()
+        #fe.Finish()
 
-        '''
-        # NOTE: Original code - to be removed after testing with new
-        # file-extraction code.
-        for p in range(0, self.num_partitions):
-            logging.info("%s: Extracting contents from part p = %s", fname, p)
-            listfile = image_path + "_filelist" + "_p" + str(p+1)
-            logging.info("%s: Reading from listfile %s to extract contents", \
-                                               fname, listfile)
+        print(">> Files extractd for the image {} at {}".format(image, file_extract_dir_per_image))
 
-            with open(listfile) as lf:
-                for line in lf:
-                    logging.info("File:%s ", line)
-                    if "Volume Label Entry" in line:
-                        continue
-                    filename = os.path.basename(line).rstrip()
-                    dirname = os.path.dirname(line).rstrip()
-                    logging.info("Filename: %s ", filename)
-
-                    if self.isFileTextractable(filename, config_file):
-                        logging.info("File %s is textractable", line)
-
-                        # If directory for partition doesn't exist, create.
-                        part_dir = os.path.join(file_extract_dir_per_image, \
-                                                           str(p))
-                        if not os.path.exists(part_dir):
-                            os.mkdir(part_dir)
-                            logging.info("%s: Created directory %s",\
-                                                     fname, part_dir)
-
-                        # Make sure all the directories in the path are created.
-                        logging.info("%s: Creating directories for path %s ",\
-                                       fname, line)
-                        self.bnCreateDirsInPath(part_dir, line)
-
-                        # Get the inode for the file
-                        file_entry_lister = FileEntryLister()
-
-                        u_image_path = unicode(image_path, "utf-8")
-                        u_line = unicode(line, "utf-8")
-
-                        file_path = part_dir + u_line.rstrip()
-                        logging.info("%s: Writing file to directory: %s",\
-                                        fname, file_path)
-                        inode = file_entry_lister.GetInodeForFile(\
-                                        u_image_path, u_line.rstrip())
-
-                        logging.info("%s: Inode:%s ", fname, str(inode))
-                        logging.info("%s: Getting FS for file %s \
-                                and partition %s" ,fname, file_path, p)
-                        if inode < 0:
-                            logging.info("%s: Inode for file %s is %d", \
-                               fname, file_path, inode)
-                            continue
-                                    
-                        fs = self.bnlpGetFsForImage(image_path, \
-                                                    image_index, \
-                                                    p)
-                        # Now copy the file to the directory
-                        self.bnlpDnldFile(inode, fs, file_path)
-                    else:
-                        logging.info("%s: File not textractable:%s ",\
-                                                  fname, filename)
-        '''
-                  
-                    
     def isFileTextractable(self, filename, config_file):
         """ Not all files are extractable as text file. Before extracting
             a file, it should pass this test.
