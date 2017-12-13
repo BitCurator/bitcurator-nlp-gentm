@@ -224,6 +224,34 @@ class BnFilextract:
                 os.mkdir(newdir)
                 newdir = os.path.join(newdir, file_list[i+1])
         
+    def bnQueueFileForExtraction(self,\
+                                 base_path_spec,\
+                                 image_path, output_path, jobs):
+        """ This routine pushes the file_entry corresponding to the
+            given path_spec into the queue for file-extraction using
+            dfvfs/FileExtractor APIs.
+        Args:
+            base_path_spec
+            image_path: path to disk image
+            output_path: Where the extracted files will go.
+            jobs: Jobs queue for extraction task.
+        """
+        fname = sys._getframe().f_code.co_name
+        file_entry_lister = FileEntryLister()
+
+        file_entry = file_entry_lister.GetFileEntry(base_path_spec)
+
+        fe = FileExtractor(base_path_spec, output_path)
+        jobs.append(fe)
+        logging.info("[%s]: Jobs before adding to queue: %s ", fname, jobs)
+        fe.start()
+        fe.AddFileToQueue(file_entry, image_path)
+
+        fe.Finish()
+        logging.info("[%s]: Jobs after adding to the queue: %s" ,fname, jobs)
+
+        for job in jobs:
+            job.join()
 
     def bnExtractFiles(self, ent, image, image_index, parse_en, config_file):
         """ Generate file-list from the disk image and extract the
@@ -287,22 +315,11 @@ class BnFilextract:
 
         file_entry_lister = FileEntryLister()
         output_path = file_extract_dir_per_image
-        base_path_spec = file_entry_lister.GetBasePathSpec(image_path)
 
-        file_entry = file_entry_lister.GetFileEntry(base_path_spec)
-
-        fe = FileExtractor(base_path_spec, output_path)
-        jobs.append(fe)
-        fe.start()
-        fe.AddFileToQueue(file_entry, image_path)
-
-        fe.Finish()
-
-        for job in jobs:
-            job.join()
-        #fe.Finish()
-
-        print(">> Files extractd for the image {} at {}".format(image, file_extract_dir_per_image))
+        for p in range(0, self.num_partitions):
+            base_path_spec = file_entry_lister.GetBasePathSpec(image_path, True)
+            logging.info("%s: Extracting contents from part p = %s", fname, p)
+            self.bnQueueFileForExtraction(base_path_spec, image_path, output_path, jobs)
 
     def isFileTextractable(self, filename, config_file):
         """ Not all files are extractable as text file. Before extracting
