@@ -77,7 +77,7 @@ class FileEntryLister(object):
     return u'{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
-  def _GetNextLevelTSKPartionVolumeSystemPathSpec(self, source_path_spec):
+  def _GetNextLevelTSKPartionVolumeSystemPathSpec(self, source_path_spec, is_single_part):
     """Determines the next level volume system path specification.
 
     Args:
@@ -108,7 +108,7 @@ class FileEntryLister(object):
       logging.warning(u'No supported partitions found.')
       return source_path_spec
 
-    if len(volume_identifiers) == 1:
+    if (len(volume_identifiers) == 1) or (is_single_part == True):
       return path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
           parent=source_path_spec)
@@ -246,7 +246,7 @@ class FileEntryLister(object):
     # TODO: implement.
     return source_path_spec
 
-  def _GetUpperLevelVolumeSystemPathSpec(self, source_path_spec):
+  def _GetUpperLevelVolumeSystemPathSpec(self, source_path_spec, is_single_part):
     """Determines the upper level volume system path specification.
 
     Args:
@@ -273,7 +273,7 @@ class FileEntryLister(object):
 
     if type_indicators[0] == definitions.TYPE_INDICATOR_TSK_PARTITION:
       path_spec = self._GetNextLevelTSKPartionVolumeSystemPathSpec(
-          source_path_spec)
+          source_path_spec, is_single_part)
 
     elif type_indicators[0] == definitions.TYPE_INDICATOR_VSHADOW:
       path_spec = self._GetNextLevelVshadowVolumeSystemPathSpec(
@@ -400,8 +400,10 @@ class FileEntryLister(object):
     logging.info("Inode: for file %s = %s ",file_path, stat_object.ino)
     return(stat_object.ino)
 
-  def GetBasePathSpec(self, source_path):
+  def GetBasePathSpec(self, source_path, is_single_part=False):
     """Determines the base path specification.
+       (If is_sing_part is True (when this is called per partition),
+       it doesn't get into checking the individual partitions).
 
     Args:
       source_path: the source path.
@@ -461,7 +463,7 @@ class FileEntryLister(object):
       # since not all RAW storage media image naming schemas are known and
       # its type can only detected by its content.
 
-      path_spec = self._GetUpperLevelVolumeSystemPathSpec(path_spec)
+      path_spec = self._GetUpperLevelVolumeSystemPathSpec(path_spec, is_single_part)
 
       # In case we did not find a volume system type we keep looking
       # since we could be dealing with a store media image that contains
