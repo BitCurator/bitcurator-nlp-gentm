@@ -121,6 +121,7 @@ class BnTopicModel():
     def tm_generate_graphlab(self, indir, num_topics, config_file):
         ''' Generate the LDA model for documents in indir, using graphlab
         '''
+        indir_path = os.path.join(os.getcwd(), indir)
         print(">> Graphlab: Creating SArray for files in ", indir)
         sa = self.bnGenerateSArray(indir, config_file)
 
@@ -174,10 +175,17 @@ class BnTopicModel():
                 file_path = '/'.join(path) + '/' + filename
 
                 bn = BnFilextract()
+                if os.stat(file_path).st_size == 0:
+                    logging.info(">>>> File %s is empty. Skip it ", file_path)
+                    continue
+
                 if bn.isFileTextractable(filename, config_file):
                     try:
                         input_file_contents = textract.process(file_path)
                         logging.info("Textracted %s ", file_path)
+                        if len(input_file_contents) == 0:
+                            logging.info(">>>> File %s is empty. Skip it ", file_path)
+                            continue
                     except (textract.exceptions.ShellError, \
                        textract.exceptions.ExtensionNotSupported) as e:
                         logging.info("Textract failed for file %s, error: %s",\
@@ -209,6 +217,19 @@ class BnTopicModel():
     
         logging.info("%s: Total num docs: %d ", fname, num_docs)
         return sa_g
+
+    def bnRemoveEmptyFiles(self, path):
+        ''' Traverses the directory and recursively removes empty files.
+        '''
+        files = os.listdir(path)
+        if len(files):
+            for fl in files:
+                fullpath = os.path.join(path, fl)
+                if os.path.isdir(fullpath):
+                    self.bnRemoveEmptyFiles(fullpath)
+                if os.stat(fullpath).st_size == 0:
+                    logging.info("Removing file %s ", fullpath)
+                    os.remove(fullpath)
 
 def bn_parse_config_file(config_file, section_name):
     ''' Parses the config file to extract the image names and entity list.
