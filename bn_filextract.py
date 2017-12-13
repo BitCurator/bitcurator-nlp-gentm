@@ -27,6 +27,7 @@ from subprocess import Popen,PIPE
 import textract
 import logging
 from bcnlp_listfiles import FileEntryLister
+from bcnlp_fxtract import FileExtractor
 
 # FIXME: The following is needed only for bn_plot : See how it can be 
 # selectively imported
@@ -72,7 +73,6 @@ class BnFilextract:
     part_array = ["image_path", "addr", "slot_num", "start_offset", "desc"]
     partDictList = []
     num_partitions_ofimg = dict()
-  
 
     def bnlpGetFsForImage(self, image_path, image_index, partition_num):
         """ Gets the filesystem info for an image and partition,
@@ -185,22 +185,17 @@ class BnFilextract:
           image_path: Path to specified image
       
         """
-        outfile = image_path + "_filelist" 
-        if os.path.exists(outfile):
-            os.remove(outfile)
-
-        of = open(outfile, "a")
+        num_partitions = 1
 
         file_entry_lister = FileEntryLister()
         try:
-            base_path_spec = file_entry_lister.GetBasePathSpec(image_path)
+            num_partitions = file_entry_lister.ListAllFiles(image_path)
             
-            file_entry_lister.ListFileEntries(base_path_spec, of)
         except:
             print "file_entry_lister failed"
+            return(0)
 
-        print("File {} generated".format(outfile))
-        of.close()
+        return num_partitions
 
     def bnCreateDirsInPath(self, file_extract_dir, filepath):
         """ Looking at the path of the file, directories are created
@@ -229,6 +224,34 @@ class BnFilextract:
                 os.mkdir(newdir)
                 newdir = os.path.join(newdir, file_list[i+1])
         
+    def bnQueueFileForExtraction(self,\
+                                 base_path_spec,\
+                                 image_path, output_path, jobs):
+        """ This routine pushes the file_entry corresponding to the
+            given path_spec into the queue for file-extraction using
+            dfvfs/FileExtractor APIs.
+        Args:
+            base_path_spec
+            image_path: path to disk image
+            output_path: Where the extracted files will go.
+            jobs: Jobs queue for extraction task.
+        """
+        fname = sys._getframe().f_code.co_name
+        file_entry_lister = FileEntryLister()
+
+        file_entry = file_entry_lister.GetFileEntry(base_path_spec)
+
+        fe = FileExtractor(base_path_spec, output_path)
+        jobs.append(fe)
+        logging.info("[%s]: Jobs before adding to queue: %s ", fname, jobs)
+        fe.start()
+        fe.AddFileToQueue(file_entry, image_path)
+
+        fe.Finish()
+        logging.info("[%s]: Jobs after adding to the queue: %s" ,fname, jobs)
+
+        for job in jobs:
+            job.join()
 
     def bnExtractFiles(self, ent, image, image_index, parse_en, config_file):
         """ Generate file-list from the disk image and extract the
@@ -241,8 +264,10 @@ class BnFilextract:
             parse_en: Placeholder
             config_file: Name of the configuration file.
         """
-        logging.info("Extracting files for img: %s, with config_file: %s ",\
-                                                 image, config_file)
+        fname = sys._getframe().f_code.co_name
+        logging.info("%s: Extracting files for img: %s, with config_file: %s ",\
+                                                 fname, image, config_file)
+        jobs = []
 
         config = ConfigObj(config_file)
         exc_fmt_list = self.bnGetExFmtsFromConfigFile(config_file)
@@ -274,57 +299,28 @@ class BnFilextract:
         if not os.path.exists(file_extract_dir_per_image):
             subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
 
-        # FIXME: For multipart image, find the numparts here
-        # partition_in[img] = self.num_partitions  (just a placeholder)
-        # for now, num_partitions = 1
         self.num_partitions = \
             self.bnlpGetPartInfoForImage(image_path, image_index)
-        partition_in[image] = self.num_partitions
 
-        logging.info("bnExtractFiles: Num of partitions:%s ", \
+        '''
+        # Call Dfvfs method to generate the file-list in the image
+        self.num_partitions = self.bnDfvfsGenerateFileList(image_path)
+        partition_in[image] = self.num_partitions
+        '''
+
+        logging.info("%s: # partitions:%s Generating filelist ", fname, \
                                               self.num_partitions)
 
-        # Call Dfvfs method to generate the file-list in the image
-        self.bnDfvfsGenerateFileList(image_path)
+        logging.info("%s: Generated filelist. Extract contents", fname)
+
+        file_entry_lister = FileEntryLister()
+        output_path = file_extract_dir_per_image
 
         for p in range(0, self.num_partitions):
-            listfile = image_path + "_filelist" 
-            with open(listfile) as lf:
-                for line in lf:
-                    logging.info("File:%s ", line)
-                    if "Volume Label Entry" in line:
-                        continue
-                    filename = os.path.basename(line).rstrip()
-                    dirname = os.path.dirname(line).rstrip()
-                    logging.info("Filename: %s ", filename)
-                    if self.isFileTextractable(filename, config_file):
-                        logging.info("File %s is textractable", line)
+            base_path_spec = file_entry_lister.GetBasePathSpec(image_path, True)
+            logging.info("%s: Extracting contents from part p = %s", fname, p)
+            self.bnQueueFileForExtraction(base_path_spec, image_path, output_path, jobs)
 
-                        # Make sure all the directories in the path are created.
-                        logging.info("Creating directories for path %s ", line)
-                        self.bnCreateDirsInPath(file_extract_dir_per_image, line)
-                        # Get the inode for the file
-                        file_entry_lister = FileEntryLister()
-
-                        u_image_path = unicode(image_path, "utf-8")
-                        u_line = unicode(line, "utf-8")
-
-                        file_path = file_extract_dir_per_image + u_line.rstrip()
-                        logging.info("Writing file to directory: %s", file_path)
-                        inode = file_entry_lister.GetInodeForFile(\
-                                        u_image_path, u_line.rstrip())
-            
-                        logging.info("bnExtractFiles: Inode:%s ", str(inode))
-                                    
-                        fs = self.bnlpGetFsForImage(image_path, \
-                                                    image_index, \
-                                                    p)
-                        # Now copy the file to the directory
-                        self.bnlpDnldFile(inode, fs, file_path)
-                    else:
-                        logging.info("File not textractable:%s ", filename)
-                  
-                    
     def isFileTextractable(self, filename, config_file):
         """ Not all files are extractable as text file. Before extracting
             a file, it should pass this test.
@@ -374,7 +370,12 @@ class BnFilextract:
           inode: Inode of the given file
           fs: Filesystem info 
         """
-        f = fs.open_meta(inode=inode)
+        logging.info("bnlpDnldFile: file_path:%s, inode:%d",filepath, inode)
+        try:
+            f = fs.open_meta(inode=inode)
+        except:
+            logging.info("fs.open_meta failed for file %s ", filepath)
+            return
 
         # Read data and store it in a string
         offset = 0
