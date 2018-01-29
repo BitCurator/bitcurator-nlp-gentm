@@ -51,7 +51,7 @@ __pip_pre_install_noinput() {
     pip2 install --pre --upgrade $@; return $?
 }
 
-install_ubuntu_1604_deps() {
+install_ubuntu_deps() {
 
     echoinfo "Updating your APT Repositories ... "
     apt-get update >> $LOG_BASE/nlp-install.log 2>&1 || return 1
@@ -71,7 +71,7 @@ install_ubuntu_1604_deps() {
     return 0
 }
 
-install_ubuntu_1604_packages() {
+install_ubuntu_packages() {
     packages="antiword
 automake
 curl
@@ -127,7 +127,7 @@ zlib1g-dev"
     return 0
 }
 
-install_ubuntu_1604_pip_packages() {
+install_ubuntu_pip_packages() {
 
     pip_packages="textract
     gensim
@@ -260,13 +260,13 @@ complete_message() {
 }
 
 echo "Installing core dependencies...."
-install_ubuntu_1604_deps
+install_ubuntu_deps
 
 echo "Installing Ubuntu packages...."
-install_ubuntu_1604_packages stable
+install_ubuntu_packages stable
 
 echo "Installing pip packages...."
-install_ubuntu_1604_pip_packages stable
+install_ubuntu_pip_packages stable
 
 echo "Installing source packages...."
 install_source_packages

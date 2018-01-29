@@ -4,7 +4,7 @@ Generate topic models using open text automatically extracted from various file 
 
 ## Building and running
 
-The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu (currently tested in Ubuntu 16.04 and Ubuntu 17.04). Note that this script will install certain tools (TSK, libewf, and several others) by compiling and installing from source.
+The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu (currently tested in Ubuntu 17.10.1, but should also build in Ubuntu 16.04 and Ubuntu 17.04). Note that this script will install certain tools (TSK, libewf, and several others) by compiling and installing from source.
 
 In a Ubuntu host or a clean virtual machine, first make sure you have git installed: 
 
