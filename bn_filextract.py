@@ -117,6 +117,8 @@ class BnFilextract:
         return exc_fmt_list
 
     def bnGetFileContents(self, filename, config_file):
+        file_extract_dir = self.bnGetConfigInfo(config_file, \
+                         "confset_section", "file_staging_directory")
         """EXtract the contents of a file while doing nlp on a local
            directory of files as opposed to a disk image.
  
@@ -149,7 +151,7 @@ class BnFilextract:
 
         return input_file_contents 
 
-    def bn_traverse_infile_dir(self, filextract_dir, documents, config_file):
+    def bnTraverseInfileDir(self, filextract_dir, documents, config_file):
         ''' This routine traverses the given directory to extract the
             files and adds the contents to the global documents list.
 
@@ -175,6 +177,43 @@ class BnFilextract:
                 documents.append(doc)
                 num_docs += 1
             logging.info("D2: traverse: Total num docs: ", num_docs)
+
+    def bnTraverseDirForPlot(self, img, filextract_dir, ent, parse_en, config_file):
+        ''' This routine traverses the given directory to extract the
+            files and invokes a routine to process the text for plotting
+            purposes.
+
+        Args:
+          img: Image index
+          filextract_dir: Direcotry whose files need to be extracted.
+          ent: Handle to ParseForEnts class
+          parse_en: Spacy handle
+          config_file: Configuration file.
+        '''
+
+        num_docs = 0
+        for root, dirs, files in os.walk(filextract_dir):
+            path = root.split(os.sep)
+
+            entity_list = ent.bnParseConfigFileForEnts("bntm_config.txt")
+
+            for filename in files:
+                file_path = '/'.join(path) + '/' + filename
+                file_contents = self.bnGetFileContents(file_path, config_file)
+                logging.info("D2: traverse: getting contents from %s ",\
+                                     file_path)
+                logging.info("bcnlpProcesstext for file:%s", file_path)
+
+                try:
+                    ent.bcnlpProcessText(img, filename, unicode(file_contents,\
+                           "utf-8"), entity_list, parse_en, bg=False)
+                except:
+                    logging.info("bcnlpProcessText failed for img:%s, file:%s",\
+                        str(img), filename)
+                    continue
+
+                num_docs += 1
+            #logging.info("[V] traverse: Total num docs: %d ", num_docs)
 
     def bnDfvfsGenerateFileList(self, image_path):
         """ Using Dfvfs methods, file-list is geenrated from the given 
@@ -272,22 +311,18 @@ class BnFilextract:
         config = ConfigObj(config_file)
         exc_fmt_list = self.bnGetExFmtsFromConfigFile(config_file)
 
-        file_extract_dir = "file_staging_directory"
-        config_section = config['confset_section']
-        for key in config_section:
-           #print (key, config_section[key])
-           if key == "file_staging_directory":
-               file_extract_dir = config_section[key]
-               break
-        else:
-           print("file_staging_directory not found in config file. \
-                          using default\n")
+        file_extract_dir = self.bnGetConfigInfo(config_file, \
+                         "confset_section", "file_staging_directory")
+
+
         disk_image_dir = self.bnGetConfigInfo(config_file, \
                          "confset_section", "disk_image_dir")
 
         image_path = os.getcwd() + "/" + disk_image_dir + "/" + image
 
         file_extract_dir_path = os.getcwd() + '/'+ file_extract_dir
+        logging.info("%s: File Extracxtion directory: %s ", \
+                                       fname, file_extract_dir_path)
 
         print "\n>> Files will be extracted in ", file_extract_dir_path
 
