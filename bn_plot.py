@@ -15,8 +15,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 import spacy
-import spacy.en
-from spacy.en import English
+#import spacy.en
+#from spacy.en import English
 import textract
 
 dict_ent = {}
@@ -84,19 +84,18 @@ class ParseForEnts():
         self.ax.set_zlabel('Entity')
 
     def getIdsForPlot(self, img, doc, entity):
-        #print "ParseForEnts: getIdsForPlot: img_list: ", img_list
         if img not in img_list:
-            #print "Appending IMG to img_list : ", img
+            logging.info("Appending img to img_list : %s", img)
             img_list.append(img)
         # return the key as it already exists
         img_id = img_list.index(img)
         
-        #print "ParseForEnts: getIdsForPlot: doc_list: ", doc_list
+        #logging.info("[V]ParseForEnts: getIdsForPlot: doc_list: %s ", doc_list)
         if doc not in doc_list:
-            #print "Appending DOC to doc_list : ", doc
+            logging.info("Appending DOC to doc_list : %s", doc)
             doc_list.append(doc)
-        #else:
-            #logging.debug("DOC %s ALREADY EXISTS ",doc)
+        else:
+            logging.info("Doc %s already exists ",doc)
 
         # return the key as it already exists
         doc_id = doc_list.index(doc)
@@ -106,45 +105,48 @@ class ParseForEnts():
         # return the key as it already exists
         entity_id = entities_list.index(entity)
 
-        #logging.debug("getIdsForPlot: returning img_id {}, doc_id {} and entity_id: entity_id ".format(img_id, doc_id, entity_id))
+        logging.info("getIdsForPlot:ret img_id %d doc_id %d entity_id: %d ",\
+                      img_id, doc_id, entity_id)
   
         return img_id, doc_id, entity_id
 
     def tagEnts(self, text, entity_list, nlp, img, doc):
         self.spacy_doc = nlp(text)
-        logging.debug("SPACY_DOC Entities: \n")
+        logging.info("Spacy_doc Entities: \n")
 
         '''
         for ent in self.spacy_doc.ents:
-            logging.debug("%s, %s, %s", ent, ent.label, ent.label_)
+            logging.info("%s, %s, %s", ent.text, ent.label, ent.label_)
         '''
 
-        for i in entity_list:
-            dict_ent[i] = 0
+        for j in entity_list:
+            dict_ent[j] = 0
 
-        logging.debug("Entity list: %s", entity_list)
+        logging.info("tagEnts: Entity list: %s", entity_list)
         for word in self.spacy_doc[:-1]:
-            #logging.debug("Word: %s, ent_type: %s ", word, str(word.ent_type_))
+            #logging.info("[V]Word: %s ent_type: %s ", \
+                              #word, str(word.ent_type_))
 
             start = word.i
             end = word.i + 1
             while end < len(self.spacy_doc) and self.spacy_doc[end].is_punct:
                 end += 1
             self.span = self.spacy_doc[start : end]
-            if word.ent_type_ in entity_list or (word.ent_type_).lower() in entity_list:
-                #logging.debug("ENT: Image:%s Doc:%s Entity: %s ent_type:%s ",img, doc, word, word.ent_type_)
-                ## logging.debug("ENT: Image:%s Doc:%s Entity: %s ",img, doc, word)
+            if word.ent_type_ in entity_list or \
+                       (word.ent_type_).lower() in entity_list:
+                #logging.info("tagEnts:Img:%s Doc:%s Entity: %s ent_type:%s ", \
+                                  #img, doc, word, word.ent_type_)
 
                 x, y, z = self.getIdsForPlot(img, doc, word)
                 self.plot3d(x, y, z)
-                ## logging.debug("[D]tagEnts: ent_type %s is in entity_list ", \
-                      ##word.ent_type_)
+                logging.info("[D]tagEnts: ent_type %s is in entity_list ", \
+                      word.ent_type_)
                 end_char = "end: "+str(self.span.end_char)
                 start_char = "start: "+str(self.span.start_char)
                 ent_type = "type: "+word.ent_type_
                 self.spans.append((end_char, start_char, ent_type))
-                ##logging.debug("[D]tagEnts: Appended %s, New SPANS: %s ", \
-                      ## word, self.spans)
+                logging.debug("[D]tagEnts: Appended %s, New SPANS: %s ", \
+                       word, self.spans)
 
                 # For generating histogram, a new dictionary is created for
                 # each entity. First time the value is initialized to 1.
@@ -246,6 +248,7 @@ class ParseForEnts():
     
     
     def bcnlpProcessText(self, img, doc, text, entity_list, parse_en, bg=False):
+        logging.info("ProcessText: img: %s doc: %s",img, doc)
         spans, dict_ents = self.tagEnts(text, entity_list, parse_en, img, doc)
         #logging.debug("const ents = %s", entity_list)
         
@@ -343,15 +346,24 @@ if __name__ == "__main__":
     for img in cfg_image:
         print "Extracting files from image ", cfg_image[img]
         bn.bnExtractFiles(ent, cfg_image[img], i, nlp, config_file)
-        #bnExtractFiles(bn, ent, cfg_image[img], i, nlp)
+        i += 1
+
+    #entity_list = ent.bnParseConfigFileForEnts("bn_config.txt")
+    # Now traverse the directory and generate entities, etc.
+    file_extract_dir = bn.bnGetConfigInfo(config_file, \
+                         "confset_section", "file_staging_directory")
+
+    i = 0
+    for img in cfg_image:
+        new_file_extract_dir = os.path.join(file_extract_dir, str(i))
+        bn.bnTraverseDirForPlot(img, new_file_extract_dir, \
+                                       ent, nlp, config_file)
         i += 1
 
     print(">> Plotting the results ")
 
     plt.show()
-    
-    
-    
+
     '''
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
