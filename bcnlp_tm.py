@@ -129,10 +129,14 @@ class BnTopicModel():
         sa_docs_nsw = sa_docs.dict_trim_by_keys(gl.text_analytics.stopwords(), \
                                                 True)
 
+        num_iterations = bn.bnGetConfigInfo(config_file, \
+                          "confset_section", "num_iterations")
+
         print(">> Graphlab: Creating topic model with {} topics: ".\
                                         format(num_topics))
         topic_model = gl.topic_model.create(sa_docs_nsw, \
-                      num_topics=int(num_topics), num_iterations=100)
+                      num_topics=int(num_topics), \
+                      num_iterations=int(num_iterations))
 
         print(">> Graphlab: Preparing data: ")
         vis_data = pyLDAvis.graphlab.prepare(topic_model, sa_docs_nsw)
