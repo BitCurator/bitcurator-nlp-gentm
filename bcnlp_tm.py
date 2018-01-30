@@ -190,10 +190,8 @@ class BnTopicModel():
                         if len(input_file_contents) == 0:
                             logging.info(">>>> File %s is empty. Skip it ", file_path)
                             continue
-                    except (textract.exceptions.ShellError, \
-                       textract.exceptions.ExtensionNotSupported) as e:
-                        logging.info("Textract failed for file %s, error: %s",\
-                                filename, e)
+                    except:
+                        logging.info("Textract failed for file %s ", filename)
                         continue
 
                     input_file_contents = self.remove_punctuation(input_file_contents)
@@ -286,7 +284,7 @@ def bnTraverseInfileDir(filextract_dir):
         # print "bnTraverseInFileDir: Total num docs: ", num_docs
         
 if __name__ == "__main__":
-    parser = ArgumentParser(prog='bn_gensim.py', description='Topic modeling')
+    parser = ArgumentParser(prog='bcnlp_tm.py', description='Topic modeling')
     parser.add_argument('--config', action='store', \
                                   help="Config file[bntm_config.txt] ")
     parser.add_argument('--infile', action='store', help="input directory ")
