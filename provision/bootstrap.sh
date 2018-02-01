@@ -328,7 +328,7 @@ install_source_packages() {
         # Newer versions break a lot of stuff. Keep 20140608 for now.
         cd /tmp
         #cp /vagrant/externals/libewf-20140608.tar.gz .
-        cp /$HOME/bitcurator-nlp-gentm/externals/libewf-20140608.tar.gz .
+        cp /vagrant/bitcurator-nlp-gentm/externals/libewf-20140608.tar.gz .
         tar zxf libewf-20140608.tar.gz >> $HOME/nlp-install.log 2>&1
         cd libewf-20140608
         ./configure --enable-python --enable-v1-api >> $HOME/nlp-install.log 2>&1
