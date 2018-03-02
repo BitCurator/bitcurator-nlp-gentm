@@ -132,6 +132,7 @@ install_ubuntu_pip_packages() {
     pip_packages="textract
     gensim
     pyLDAvis
+    stop_words
     configobj"
     pip_special_packages="textacy"
 
