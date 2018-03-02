@@ -62,7 +62,7 @@ class BnTopicModel():
         '''
 
         en_stop = get_stop_words('en')
-        logging.info("Stop-words list: ", en_stop)
+        logging.info("Stop-words list: %s ", en_stop)
         texts = [[word for word in document.lower().split() \
                  if word not in en_stop] \
                    for document in documents]
