@@ -1,4 +1,9 @@
+![Logo](https://wiki.bitcurator.net/downloads/BitCurator-400px.png)
+
 # bitcurator-nlp-gentm
+
+[![GitHub issues](https://img.shields.io/github/issues/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/issues)
+[![GitHub forks](https://img.shields.io/github/forks/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/network)
 
 Generate topic models using open text automatically extracted from various file formats in disk images. This project is in development.
 
