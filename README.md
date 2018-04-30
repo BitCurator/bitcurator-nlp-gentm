@@ -67,7 +67,7 @@ $ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile <
 
 ## Documentation
 
-Additional project information can be found on the BitCurator Access wiki page at https://wiki.bitcurator.net/index.php?title=BitCurator_NLP.
+Additional project information can be found on the BitCurator NLP wiki at https://github.com/BitCurator/bitcurator-nlp/wiki.
 
 ## License(s)
 
