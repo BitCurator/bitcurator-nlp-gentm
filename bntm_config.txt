@@ -1,5 +1,5 @@
 #
-# bitcurator NLP topic modeling config file
+# bitcurator-nlp topic modeling config file
 #
 
 # Disk images to process in the "disk-images" directory

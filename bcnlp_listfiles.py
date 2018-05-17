@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # BitCurator NLP 
-# Copyright (C) 2014 - 2017
+# Copyright (C) 2016 - 2018
 # All rights reserved.
 #
 # This code is distributed under the terms of the GNU General Public
