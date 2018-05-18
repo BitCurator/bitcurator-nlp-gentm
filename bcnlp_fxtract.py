@@ -322,8 +322,3 @@ if __name__ == "__main__":
 
     fe.Finish()
 
-
-    
-
-    
-#!/usr/bin/python
