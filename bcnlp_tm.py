@@ -49,36 +49,35 @@ class BnTopicModel():
         stoplist = set('for a of the and to in'.split())
         texts = [[word for word in document.lower().split() if word not in stoplist]
             for document in documents]
-        
+
         # remove words that appear only once
         from collections import defaultdict
         frequency = defaultdict(int)
         for text in texts:
             for token in text:
                 frequency[token] += 1
-    
+
         texts = [[token for token in text if frequency[token] > 1]
              for text in texts]
-    
+
         dictionary = corpora.Dictionary(texts)
         ## dictionary.compactify()
         dictionary.save('/tmp/saved_dict.dict')
-    
+
         # Now actually convert tokenized documents to vectors:
         corpus = [dictionary.doc2bow(text) for text in texts]
 
         # store to disk, for later use
         corpora.MmCorpus.serialize('/tmp/saved_dict.mm', corpus)  
-    
+
         ## Creating Transformations
         ## The transformations are standard Python objects, typically 
         ## initialized (trained) by means of a training corpus:
         ## First, let's use tfidf for training: It just involves simply 
         ## going thru the supplied corpus once and computing document 
         ## frequencies of all its featuers.  
-    
+
         tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
-        
         corpus_tfidf = tfidf[corpus]
 
         ''' 
@@ -86,38 +85,37 @@ class BnTopicModel():
         print "Printing TFIDF of given corpus \n"
         for doc in corpus_tfidf:
             print (doc)
-    
+
         # Now Initialize an LSI transformation: num_topics set to 2 to make 
         # it 2D lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, 
         # num_topics=3)
-    
+
         # create a double wrapper over the original corpus: 
         # bow->tfidf->fold-in-lsi
         corpus_lsi = lsi[corpus_tfidf]
-    
+
         print "Printing LSI topics"
         lsi.print_topics(4)
-    
+
         for doc in corpus_lsi:
             print (doc)
         '''
-        
+
         # Create an LDA model
         lda_model = models.LdaModel(corpus_tfidf, \
                                     id2word=dictionary, \
                                     num_topics=5)
         corpus_lda = lda_model[corpus]
-    
+
         corpus_lda_tfidf = lda_model[corpus_tfidf]
-        
+
         ## lda_model.print_topics(5)
-    
         #vis_data = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
         vis_data = pyLDAvis.gensim.prepare(lda_model, corpus_lda, dictionary)
 
         #pyLDAvis.display(vis_data)
         pyLDAvis.show(vis_data)
-    
+
     def tm_generate_graphlab(self, indir, num_topics, config_file):
         ''' Generate the LDA model for documents in indir, using graphlab
         '''
@@ -216,7 +214,7 @@ class BnTopicModel():
                 else:
                     sa_g = sa_g.append(sa_sub)
                 num_docs += 1
-    
+
         logging.info("%s: Total num docs: %d ", fname, num_docs)
         return sa_g
 
@@ -282,7 +280,7 @@ def bnTraverseInfileDir(filextract_dir):
             num_docs += 1
 
         # print "bnTraverseInFileDir: Total num docs: ", num_docs
-        
+
 if __name__ == "__main__":
     parser = ArgumentParser(prog='bcnlp_tm.py', description='Topic modeling')
     parser.add_argument('--config', action='store', \
@@ -338,13 +336,13 @@ if __name__ == "__main__":
     elif tm == 'graphlab':
         if is_disk_image:
             indir = bn.bnGetOutDirFromConfig(config_file)
-            print(">> Generating graphlab for images in disk image")
-            logging.info(">> Generating graphlab for images in disk image")
-            logging.info("File-extracted directory: %s ", indir)
+            print(">> Generating model via graphlab for files in disk image")
+            logging.info(">> Generating model via graphlab for files in disk image")
+            logging.info("Extracted file directory: %s ", indir)
             tmc.tm_generate_graphlab(indir, num_topics, config_file)
         else:
-            print(">> Generating graphlab for files in ", infile)
-            logging.info(">> Generating graphlab for files in %s", infile)
+            print(">> Generating model via graphlab for files in ", infile)
+            logging.info(">> Generating model via graphlab for files in %s", infile)
             tmc.tm_generate_graphlab(infile, num_topics, config_file)
 
 
