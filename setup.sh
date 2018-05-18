@@ -1,51 +1,56 @@
 #!/usr/bin/env bash
-# nlp_script: Build and configuration script for nlp-webtools
-# This script is only to be run the *first time* you issue the command:
+
+#
+# setup.sh: Build and configuration script for nlp-webtools
+#
+# This script sets up a correctly configured environment to the topic modeling tool.
+# It should only be run once prior to running "python bcnlp_tm.py" for the first
+# time.
+#
 
 LOG_BASE=/tmp
 
-#--- FUNCTION ----------------------------------------------------------------
+#--- FUNCTION -----------------------------------------------------------------
 # NAME: echoinfo
 # DESCRIPTION: Echo information to stdout.
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 echoinfo() {
     printf "%s * STATUS%s: %s\n" "${GC}" "${EC}" "$@";
 }
 
-#--- FUNCTION ----------------------------------------------------------------
+#--- FUNCTION -----------------------------------------------------------------
 # NAME: echoerr
 # DESCRIPTION: Echo errors to stderr.
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 echoerror() {
     printf "%s * ERROR%s: %s\n" "${RC}" "${EC}" "$@" 1>&2;
 }
 
-#---  FUNCTION  ----------------------------------------------------------------
+#--- FUNCTION -----------------------------------------------------------------
 #          NAME:  __apt_get_install_noinput
 #   DESCRIPTION:  (DRY) apt-get install with noinput options
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 __apt_get_install_noinput() {
     #apt-get install -y -o DPkg::Options::=--force-confold "$@"; return $?
     yes | aptdcon --hide-terminal --install "$@"; return $?
 }
 
-#---  FUNCTION  ----------------------------------------------------------------
+#--- FUNCTION -----------------------------------------------------------------
 #          NAME:  __pip_install_noinput
 #   DESCRIPTION:  (DRY)
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 __pip_install_noinput() {
-    #pip install --upgrade "$@"; return $?
     # Uncomment for Python 3
     #pip3 install --upgrade $@; return $?
     pip2 install --upgrade $@; return $?
 }
-#---  FUNCTION  ----------------------------------------------------------------
+
+#--- FUNCTION -----------------------------------------------------------------
 #          NAME:  __pip_install_noinput
 #   DESCRIPTION:  (DRY)
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 __pip_pre_install_noinput() {
-    #pip install --pre --upgrade "$@"; return $?
     # Uncomment for Python 3
     #pip3 install --pre --upgrade $@; return $?
     pip2 install --pre --upgrade $@; return $?
@@ -175,11 +180,9 @@ install_ubuntu_pip_packages() {
 
 install_source_packages() {
 
-  #echoinfo "nlp-webtools: Nothing to be installed currently. Continuing..."
   # Install libuna from specific release
   echoinfo "nlp-webtools: Building and installing libuna"
         CDIR=$(pwd)
-
         # Newer versions break a lot of stuff. Keep 20150927 for now.
         cd /tmp
         wget -q https://github.com/libyal/libuna/releases/download/20170112/libuna-alpha-20170112.tar.gz
@@ -198,12 +201,9 @@ install_source_packages() {
   # Install libewf from current sources
   echoinfo "nlp-webtools: Building and installing libewf"
         CDIR=$(pwd)
-        #echoinfo "CDIR: " $CDIR
-        #echoinfo "HOME: " $HOME
 
         # Newer versions break a lot of stuff. Keep 20140608 for now.
         cd /tmp
-        #cp /vagrant/externals/libewf-20140608.tar.gz .
         cp /$HOME/bitcurator-nlp-gentm/externals/libewf-20140608.tar.gz .
         tar zxf libewf-20140608.tar.gz >> $HOME/nlp-install.log 2>&1
         cd libewf-20140608
