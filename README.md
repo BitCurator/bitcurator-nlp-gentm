@@ -9,7 +9,7 @@ Generate topic models using open text automatically extracted from various file 
 
 ## Building and running
 
-The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu (currently tested in Ubuntu 17.10.1, but should also build in Ubuntu 16.04 and Ubuntu 17.04). Note that this script will install certain tools (TSK, libewf, and several others) by compiling and installing from source.
+The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu 18.04LTS. This script will install certain tools (TSK, libewf, and several others) by compiling and installing from source.
 
 In a Ubuntu host or a clean virtual machine, first make sure you have git installed: 
 
@@ -50,13 +50,13 @@ $ sudo apt-get install ubuntu-desktop
 $ python bcnlp_tm.py
 ```
 
-* The results based on the text extracted from your specified file types and processed using pyLDAvis will appear automatically in a browser window. When finished viewing, you can terminate the server in the existing terminal by typing "Cntrl-X" followed by "Cntrl-C".
+* The results based on the text extracted from your specified file types and processed using pyLDAvis will appear automatically in a browser window. When finished viewing, you can terminate the server in the existing terminal by typing "Ctrl-X" followed by "Ctrl-C".
 
 * Additional usage notes
 
 Additional adjustments can be performed with command-line flags.
 * --topics: number of topics (default 10)
-* --tm: topic modeling tool (default graphlab). Options are gensim or graphlab
+* --tm: topic modeling tool (default gensim). (Graphlab option disabled due to licensing restrictions)
 * --infile: file source: if the --infile option is not used, the disc image(s) listed in the configuration 
 file will be extracted. Use --infile to specify a directory instead.
 * --config: configuration file (default bntm_config.txt in main directory) - specify file path for alternate configuration file
