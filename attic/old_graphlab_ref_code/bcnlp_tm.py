@@ -18,6 +18,8 @@ import os
 import logging
 import pyLDAvis
 import pyLDAvis.gensim
+import pyLDAvis.graphlab
+import graphlab as gl
 from gensim import corpora, models, similarities
 import gensim
 import textract
@@ -153,6 +155,32 @@ class BnTopicModel():
 
         #pyLDAvis.display(vis_data)
         pyLDAvis.show(vis_data)
+    
+    def tm_generate_graphlab(self, indir, num_topics, config_file):
+        ''' Generate the LDA model for documents in indir, using graphlab
+        '''
+        indir_path = os.path.join(os.getcwd(), indir)
+        print(">> Graphlab: Creating SArray for files in ", indir)
+        sa = self.bnGenerateSArray(indir, config_file)
+
+        sa_docs = gl.text_analytics.count_words(sa)
+        sa_docs_nsw = sa_docs.dict_trim_by_keys(gl.text_analytics.stopwords(), \
+                                                True)
+
+        num_iterations = bn.bnGetConfigInfo(config_file, \
+                          "confset_section", "num_iterations")
+
+        print(">> Graphlab: Creating topic model with {} topics: ".\
+                                        format(num_topics))
+        topic_model = gl.topic_model.create(sa_docs_nsw, \
+                      num_topics=int(num_topics), \
+                      num_iterations=int(num_iterations))
+
+        print(">> Graphlab: Preparing data: ")
+        vis_data = pyLDAvis.graphlab.prepare(topic_model, sa_docs_nsw)
+
+        print(">> Graphlab: Launching graphics ")
+        pyLDAvis.show(vis_data)
 
     def remove_punctuation(self, text):
         import string
@@ -161,6 +189,74 @@ class BnTopicModel():
     def remove_digits(self, text):
         import string
         return text.translate(None, string.digits)
+
+    def bnGenerateSArray(self, filextract_dir, config_file):
+        ''' Traverse through the files in a directory and create sArrays 
+            and append them into one single sArray.
+        '''
+        fname = sys._getframe().f_code.co_name
+        num_docs = 0
+        sa_g = gl.SArray(dtype = str)
+        sw_list = ['a', 'an', 'the', 'of', 'to', 'for','as', 'from', 'is', \
+                         'was', 'were', 'are', ',', '-', '|', '@', '.' ]
+        for root, dirs, files in os.walk(filextract_dir):
+            path = root.split(os.sep)
+
+            '''
+            print "path: ", path, len(path)
+            print "dirs: ", dirs
+            print "files: ", files
+            print((len(path) - 1) * '---', os.path.basename(root))
+            '''
+
+            # if no files continue to next level
+            if files == []:
+                continue
+
+            for filename in files:
+                file_path = '/'.join(path) + '/' + filename
+
+                bn = BnFilextract()
+                if os.stat(file_path).st_size == 0:
+                    logging.info(">>>> File %s is empty. Skip it ", file_path)
+                    continue
+
+                if bn.isFileTextractable(filename, config_file):
+                    try:
+                        input_file_contents = textract.process(file_path)
+                        logging.info("Textracted %s ", file_path)
+                        if len(input_file_contents) == 0:
+                            logging.info(">>>> File %s is empty. Skip it ", file_path)
+                            continue
+                    except:
+                        logging.info("Textract failed for file %s ", filename)
+                        continue
+
+                    input_file_contents = self.remove_punctuation(input_file_contents)
+                    input_file_contents = self.remove_digits(input_file_contents)
+                    file_path = os.path.splitext(file_path)[0]+'.txt'
+                    logging.info("%s: writing contents to outfile:%s ",
+                                         fname, file_path)
+                else:
+                    logging.info("File %s is NOT textractable ",filename)
+                    continue
+
+                with open(file_path, "w") as text_file:
+                    text_file.write(input_file_contents)
+
+                logging.info(">>> Getting SArray for file %s ", file_path)
+                sa_sub = gl.SArray(file_path)
+                gl.text_analytics.trim_rare_words(sa_sub, \
+                                   threshold=2, stopwords=sw_list )
+                # Now append the sub-sarray to the main one.
+                if num_docs == 0:
+                    sa_g = sa_sub
+                else:
+                    sa_g = sa_g.append(sa_sub)
+                num_docs += 1
+    
+        logging.info("%s: Total num docs: %d ", fname, num_docs)
+        return sa_g
 
     def bnRemoveEmptyFiles(self, path):
         ''' Traverses the directory and recursively removes empty files.
@@ -223,9 +319,9 @@ if __name__ == "__main__":
     if args.topics:
         num_topics = args.topics
 
-    # default it to gensim
+    # default it to Graphlab
     if tm == None:
-        tm = 'gensim'
+        tm = 'graphlab'
 
     if config_file == None:
         config_file = "bntm_config.txt"
@@ -252,6 +348,18 @@ if __name__ == "__main__":
         bn.bnTraverseInfileDir(infile, documents, config_file)
 
     tmc = BnTopicModel()
-    tmc.tm_generate_gensim(infile, num_topics, config_file)
+    if tm == 'gensim':
+        tmc.tm_generate_gensim(infile, num_topics, config_file)
+    elif tm == 'graphlab':
+        if is_disk_image:
+            indir = bn.bnGetOutDirFromConfig(config_file)
+            print(">> Generating graphlab for images in disk image")
+            logging.info(">> Generating graphlab for images in disk image")
+            logging.info("File-extracted directory: %s ", indir)
+            tmc.tm_generate_graphlab(indir, num_topics, config_file)
+        else:
+            print(">> Generating graphlab for files in ", infile)
+            logging.info(">> Generating graphlab for files in %s", infile)
+            tmc.tm_generate_graphlab(infile, num_topics, config_file)
 
 
