@@ -172,11 +172,13 @@ class BnFilextract:
             for filename in files:
                 file_path = '/'.join(path) + '/' + filename
                 doc = self.bnGetFileContents(file_path, config_file)
-                logging.info("D2: traverse: Appending doc %s \
-                                     to documents list ", doc)
-                documents.append(doc)
+                ## logging.info("[V]: traverse: Appending doc %s \
+                                     ## to documents list ", doc)
+                if doc != None:
+                    documents.append(doc)
                 num_docs += 1
-            logging.info("D2: traverse: Total num docs: ", num_docs)
+            logging.info("D2: traverse: Total num docs: %d", num_docs)
+        return documents
 
     def bnTraverseDirForPlot(self, img, filextract_dir, ent, parse_en, config_file):
         ''' This routine traverses the given directory to extract the
