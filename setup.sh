@@ -281,8 +281,9 @@ sudo apt-get install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstot
 echo "Installing textract..."
 sudo pip install textract
 
-echo "Installing graphlab..."
-sudo pip install --upgrade --no-cache-dir https://get.graphlab.com/GraphLab-Create/2.1/sunita@live.unc.edu/0295-EBD3-1F14-E97A-7FA1-5421-EA06-209A/GraphLab-Create-License.tar.gz
+# No longer using graphlab
+#echo "Installing graphlab..."
+#sudo pip install --upgrade --no-cache-dir https://get.graphlab.com/GraphLab-Create/2.1/[user_email]/[license_key]/GraphLab-Create-License.tar.gz
 
 echo "Installing configObj..."
 pip install configobj
