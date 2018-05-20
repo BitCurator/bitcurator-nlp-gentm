@@ -256,42 +256,61 @@ install_source_packages() {
 
 complete_message() {
     echo
-    echo "Installation Complete!"
+    echo "* Installation Complete!"
     echo
 }
 
-echo "Installing core dependencies...."
+echo " *****************************************************************************"
+echo " This script will install all required dependencies for bitcurator-nlp-gentm"
+echo
+echo " Using gensim for topic modeling by default."
+echo
+echo " Optional: Enter an email address and license key to install GraphLab? [y/N] "
+read GRAPHLAB_YESNO
+if (( ($GRAPHLAB_YESNO == "y") || ($GRAPHLAB_YESNO == "Y") )); then
+  echo " Ok, enabling GraphLab install. Enter your email address: "
+  read GRAPHLAB_EMAIL
+  echo " Enter your 32-character license key in the form XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX: "
+  read GRAPHLAB_LICENSE
+  echo " Ok, continuing..."
+else
+  echo " Continuing without GraphLab. Gensim will be used by default."
+
+echo "GRAPHLAB EMAIL: $GRAPHLAB_EMAIL"
+echo "GRAPHLAB LICENSE: $GRAPHLAB_LICENSE"
+
+echo "* Installing core dependencies...."
 install_ubuntu_deps
 
-echo "Installing Ubuntu packages...."
+echo "* Installing Ubuntu packages...."
 install_ubuntu_packages stable
 
-echo "Installing pip packages...."
+echo "* Installing pip packages...."
 install_ubuntu_pip_packages stable
 
-echo "Installing source packages...."
+echo "* Installing source packages...."
 install_source_packages
 
 # echo "current directory1: ${PWD} "
-echo "Installing textract support packages..."
+echo "* Installing textract support packages..."
 sudo apt-get install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 libpulse-dev sox swig swig3.0 libjpeg-dev zlib1g-dev
 
 
 # echo "current directory2: ${PWD} "
-echo "Installing textract..."
+echo "* Installing textract..."
 sudo pip install textract
 
 # No longer using graphlab
 #echo "Installing graphlab..."
 #sudo pip install --upgrade --no-cache-dir https://get.graphlab.com/GraphLab-Create/2.1/[user_email]/[license_key]/GraphLab-Create-License.tar.gz
 
-echo "Installing configObj..."
+echo "* Installing configObj..."
 pip install configobj
 
-echo "Installing gensim..."
+echo "* Installing gensim..."
 pip install gensim
 
-echo "Installing pyLDAvis..."
+echo "* Installing pyLDAvis..."
 pip install pyLDAvis
 
 # The following are needed for bn_plot
@@ -299,7 +318,7 @@ pip install matplotlib
 pip install spacy
 python -m spacy download en
 
-echo "Installing dfvfs..."
+echo "* Installing dfvfs..."
 curl -O https://raw.githubusercontent.com/log2timeline/dfvfs/master/requirements.txt
 pip install -r requirements.txt
 pip install dfvfs
