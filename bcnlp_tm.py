@@ -37,7 +37,7 @@ logging.basicConfig(filename= 'bcnlp_tm_warning.log', level=logging.WARNING)
 
 
 cfg_image = {}
-#documents = []
+documents = []
 
 class BnTopicModel():
 
