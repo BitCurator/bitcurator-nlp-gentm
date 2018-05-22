@@ -70,6 +70,12 @@ class BnTopicModel():
         from collections import defaultdict
         frequency = defaultdict(int)
         for text in texts:
+            i = 0
+            for word in text:
+                # NOTE:  Some text files need this conversion. See if this can
+                # be done for the whole document at one time.
+                text[i] = unicode(word, errors='ignore')
+                i+=1
             for token in text:
                 frequency[token] += 1
     
@@ -248,6 +254,7 @@ if __name__ == "__main__":
         print(">> ... Done ")
 
     else:
+        documents = []
         print(">> Extracting files from ", infile)
         bn.bnTraverseInfileDir(infile, documents, config_file)
 
