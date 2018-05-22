@@ -143,10 +143,11 @@ class BnFilextract:
 
             try:
                 input_file_contents = textract.process(filename)
+                logging.info(">>> Textract PASSED for file %s ", filename)
                 #logging.info("bcnlp:: File contents of %s %s ",\
                     # filename, input_file_contents)
             except:
-                print("\n >>> textract failed for doc {} ".format(filename))
+                logging.info("\n >>> Textract failed for doc %s ", filename)
                 return None
 
         return input_file_contents 
