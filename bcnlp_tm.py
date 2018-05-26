@@ -59,12 +59,25 @@ class BnTopicModel():
                               for document in documents]
         '''
 
+        # Remove stop words - both from known stopword list and from
+        # configuration file.
+        exc_list = bn.bnGetConfigInfo(config_file, \
+                    "confset_section", "exclude_words")
         en_stop = get_stop_words('en')
+        en_stop = en_stop + exc_list
         logging.info("Stop-words list: %s ", en_stop)
         texts = [[word for word in document.lower().split() \
                  if word not in en_stop] \
                    for document in documents]
 
+        ## from pprint import pprint  # pretty-printer
+        ## pprint(texts)
+
+        # FIXME: Trying to remove digits. But do we need to keep them?
+        # Also make sure the following is really deleting digits.
+        for text in texts:
+            text = [word for word in text if not (word.isdigit() or \
+                word[0] == '-' and word[1:].isdigit())]
 
         # remove words that appear only once
         from collections import defaultdict
@@ -155,6 +168,7 @@ class BnTopicModel():
     
         # Generate data for the pyLDAvis interface from the lda_model above
         vis_data = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
+        ###vis_data = pyLDAvis.gensim.prepare(lda_model, corpus_tfidf, dictionary)
         ##vis_data = pyLDAvis.gensim.prepare(lda_model, corpus_lda, dictionary)
 
         #pyLDAvis.display(vis_data)
@@ -253,10 +267,15 @@ if __name__ == "__main__":
             i += 1
         print(">> ... Done ")
 
+    '''
+    # NOTE: We needed this for Graphlab as we didn't do it in graphlab
+    # routine. If that code is put back we need to make sure we call
+    # bnTraverseInfileDir fron tm_generate_graphlab
     else:
         documents = []
         print(">> Extracting files from ", infile)
         bn.bnTraverseInfileDir(infile, documents, config_file)
+    '''
 
     tmc = BnTopicModel()
     tmc.tm_generate_gensim(infile, num_topics, config_file)
