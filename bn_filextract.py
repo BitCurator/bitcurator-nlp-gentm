@@ -174,7 +174,7 @@ class BnFilextract:
                 file_path = '/'.join(path) + '/' + filename
                 doc = self.bnGetFileContents(file_path, config_file)
                 ## logging.info("[V]: traverse: Appending doc %s \
-                                     ## to documents list ", doc)
+                                     ## to documents list ", filename)
                 if doc != None:
                     documents.append(doc)
                 num_docs += 1
