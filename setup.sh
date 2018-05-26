@@ -31,8 +31,8 @@ echoerror() {
 #   DESCRIPTION:  (DRY) apt-get install with noinput options
 #------------------------------------------------------------------------------
 __apt_get_install_noinput() {
-    #apt-get install -y -o DPkg::Options::=--force-confold "$@"; return $?
-    yes | aptdcon --hide-terminal --install "$@"; return $?
+    apt-get install -y -o DPkg::Options::=--force-confold "$@"; return $?
+    #yes | aptdcon --hide-terminal --install "$@"; return $?
 }
 
 #--- FUNCTION -----------------------------------------------------------------

@@ -4,8 +4,6 @@
 
 # Disk images to process in the "disk-images" directory
 [image_section]
-#uncusb.E01 = 1
-#uncusbnew.E01 = 1
 govdocs45sampler.E01 = 1
 
 # Configuration settings. Where to find disk images and store intermediary files.
