@@ -4,8 +4,9 @@
 
 # Disk images to process in the "disk-images" directory
 [image_section]
-uncusb.E01 = 1
-uncusbnew.E01 = 1
+#uncusb.E01 = 1
+#uncusbnew.E01 = 1
+govdocs45sampler.E01 = 1
 
 # Configuration settings. Where to find disk images and store intermediary files.
 [confset_section]
@@ -15,6 +16,7 @@ nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
 entity_info = "No"
 num_iterations = 200
+exclude_words = "false", "true", "other", "new", "old"
 
 # Formats to exclude when extracting text using textract
 [exclude_format_section]
