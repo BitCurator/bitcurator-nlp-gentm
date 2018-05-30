@@ -29,6 +29,12 @@ import logging
 from bcnlp_listfiles import FileEntryLister
 from bcnlp_fxtract import FileExtractor
 
+from gensim.parsing.preprocessing import remove_stopwords
+from gensim.parsing.preprocessing import preprocess_documents
+from gensim.parsing.preprocessing import stem_text
+from gensim.parsing.preprocessing import strip_numeric
+from gensim.parsing.preprocessing import strip_punctuation
+
 # FIXME: The following is needed only for bn_plot : See how it can be 
 # selectively imported
 #import bn_plot
@@ -162,6 +168,7 @@ class BnFilextract:
           config_file: Configuration file.
         '''
 
+        print("bnTraverseInfileDir: filextract_dir: ", filextract_dir)
         num_docs = 0
         for root, dirs, files in os.walk(filextract_dir):
             path = root.split(os.sep)
@@ -173,12 +180,26 @@ class BnFilextract:
             for filename in files:
                 file_path = '/'.join(path) + '/' + filename
                 doc = self.bnGetFileContents(file_path, config_file)
-                ## logging.info("[V]: traverse: Appending doc %s \
-                                     ## to documents list ", filename)
+                if doc == None:
+                    logging.info(">> Filename %s is empty. Skipping ",
+                            file_path)
+                    continue
+                doc = unicode(doc, errors='ignore')
+
+                logging.info("[V]: traverse: Appending doc %s \
+                                     to documents list ", filename)
+                ##logging.info("[VV]Document %s before preprocessing: %s",\
+                        ## filename, doc)
+                #doc = remove_stopwords(doc)
+                doc = strip_punctuation(doc)
+                doc = strip_numeric(doc)
+                logging.info("Preprocessing done on DOC %s ", filename)
+                ## logging.info("[VV]Preprocessing done on %s : %s", \
+                        ## filename, doc)
                 if doc != None:
                     documents.append(doc)
                 num_docs += 1
-            logging.info("D2: traverse: Total num docs: %d", num_docs)
+            logging.info("[D]traverse: Total num docs: %d", num_docs)
         return documents
 
     def bnTraverseDirForPlot(self, img, filextract_dir, ent, parse_en, config_file):
