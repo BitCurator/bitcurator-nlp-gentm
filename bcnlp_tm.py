@@ -50,6 +50,13 @@ class BnTopicModel():
         if documents == []:
             print("Documents are empty")
 
+        ''' #Debug
+        i = 0
+        for document in documents:
+            logging.info("Document[%d] = %s ", i, document)
+            i+=1
+        '''
+
         # remove common words and tokenize
         '''
         stoplist = set('a an the of to for s from is and this \
@@ -61,6 +68,9 @@ class BnTopicModel():
 
         # Remove stop words - both from known stopword list and from
         # configuration file.
+        # NOTE: Gensim's preprocessing to remove stop words is commented out.
+        # This seems to be doing better. Test with more dataset before
+        # deciding on which one to keep.
         exc_list = bn.bnGetConfigInfo(config_file, \
                     "confset_section", "exclude_words")
         en_stop = get_stop_words('en')
@@ -73,22 +83,20 @@ class BnTopicModel():
         ## from pprint import pprint  # pretty-printer
         ## pprint(texts)
 
-        # FIXME: Trying to remove digits. But do we need to keep them?
-        # Also make sure the following is really deleting digits.
-        for text in texts:
-            text = [word for word in text if not (word.isdigit() or \
-                word[0] == '-' and word[1:].isdigit())]
-
         # remove words that appear only once
         from collections import defaultdict
         frequency = defaultdict(int)
         for text in texts:
+            '''
+            # NOTE: Commenting for now. With the preprocessing in 
+            # filextract.py, we won't need this. Remove after testing.
             i = 0
             for word in text:
                 # NOTE:  Some text files need this conversion. See if this can
                 # be done for the whole document at one time.
                 text[i] = unicode(word, errors='ignore')
                 i+=1
+            '''
             for token in text:
                 frequency[token] += 1
     
