@@ -185,10 +185,11 @@ install_source_packages() {
   echoinfo "nlp-webtools: Building and installing libuna"
         CDIR=$(pwd)
         # Newer versions break a lot of stuff. Keep 20150927 for now.
+        # wget -q https://github.com/libyal/libuna/releases/download/20170112/libuna-alpha-20170112.tar.gz
         cd /tmp
-        wget -q https://github.com/libyal/libuna/releases/download/20170112/libuna-alpha-20170112.tar.gz
-        tar zxf libuna-alpha-20170112.tar.gz >> $HOME/nlp-install.log 2>&1
-        cd libuna-20170112
+        cp /$HOME/bitcurator-nlp-gentm/externals/libuna-alpha-20150927.tar.gz .
+        tar zxf libuna-alpha-20150927.tar.gz >> $HOME/nlp-install.log 2>&1
+        cd libuna-20150927
         ./configure >> $HOME/nlp-install.log 2>&1
         make -s >> $HOME/nlp-install.log 2>&1
         make install >> $HOME/nlp-install.log 2>&1
