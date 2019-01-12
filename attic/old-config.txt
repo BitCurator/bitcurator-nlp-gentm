@@ -14,7 +14,7 @@ nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
 entity_info = "No"
 num_iterations = 200
-exclude_words = "excludeme"
+exclude_words = "false", "true", "other", "new", "old", 'can', 'will', 'may', 'also', 'shall', 'even', 'shall'
 
 # Formats to exclude when extracting text using textract
 [exclude_format_section]
