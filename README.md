@@ -50,7 +50,8 @@ my-image-name2.dd = 1
 
 ## Running the Tool
 
-* Run the following command to extract text from the configured file types, start the topic modeling tool, and load the results into a browser window.
+Run the following command to extract text from the configured file types, start the topic modeling tool, and load the results into a browser window.
+
 ```shell
 $ python bcnlp_tm.py
 ```
