@@ -7,7 +7,7 @@
 
 Generate topic models using open text automatically extracted from various file formats in disk images. This project uses The Sleuth Kit (https://github.com/sleuthkit/sleuthkit) to parse file systems in disk images, textract (https://textract.readthedocs.io/en/stable/) to extract text from common file formats, gensim to generate topic models (https://radimrehurek.com/gensim/), and pyLDAvis (https://github.com/bmabey/pyLDAvis) for visualization.
 
-## Building and running
+## Setup and Installation
 
 The topic model generation tool depends on a number of external natural language processing and digital forensics libraries. For convenience, we have included a script that will install all the required dependencies in Ubuntu 18.04LTS. This script will install certain tools (TSK, libewf, and several others) by compiling and installing from source.
 
@@ -38,12 +38,7 @@ A prebuilt configuration file, "bntm_config.txt" includes a single sample image 
 $ sudo ./setup.sh
 ```
 
-* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
-
-```shell
-$ sudo apt-get update
-$ sudo apt-get install ubuntu-desktop
-```
+## Running the Tool
 
 * Run the following command to extract text from the configured file types, start the topic modeling tool, and load the results into a browser window.
 ```shell
@@ -63,6 +58,15 @@ file will be extracted. Use --infile to specify a directory instead.
 
 ```shell
 $ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile </directory/path>] [--config </path/to/config-file/>] 
+```
+
+## Additional Notes
+
+* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
+
+```shell
+$ sudo apt-get update
+$ sudo apt-get install ubuntu-desktop
 ```
 
 ## Documentation
