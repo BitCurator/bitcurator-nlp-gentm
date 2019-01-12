@@ -62,7 +62,7 @@ from bn_filextract import *
 from configobj import ConfigObj
 # Dict to number of partitions in each image
 partition_in = dict()
-config_file = "bntm_config.txt" # FIXME: Remove the globalization
+config_file = "config.txt" # FIXME: Remove the globalization
 logging.basicConfig(filename= 'bcnlp.log', level=logging.DEBUG)
 
 img_list = []
@@ -328,7 +328,7 @@ if __name__ == "__main__":
 
     #parse_en = English()
     nlp = spacy.load('en')
-    config_file = "bntm_config.txt"
+    config_file = "config.txt"
     #bn_parse_config_file(config_file)
     bn_parse_config_file(config_file, "image_section")
     #bn = bn_filextract.bcnlp()

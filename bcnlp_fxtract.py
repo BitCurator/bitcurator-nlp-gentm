@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     config_file = args.config
     if config_file == None:
-        config_file = "bntm_config.txt"
+        config_file = "config.txt"
 
     source_path = args.image
     if config_file == None:

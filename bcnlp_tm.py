@@ -230,7 +230,7 @@ def bn_parse_config_file(config_file, section_name):
 if __name__ == "__main__":
     parser = ArgumentParser(prog='bcnlp_tm.py', description='Topic modeling')
     parser.add_argument('--config', action='store', \
-                                  help="Config file[bntm_config.txt] ")
+                                  help="Config file[config.txt] ")
     parser.add_argument('--infile', action='store', help="input directory ")
     parser.add_argument('--tm', action='store',  \
                          help="topic modeling :gensim/graphlab ")
@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
     # Infile specifies the directory of files to run the topic modeling on.
     # If no argument specified, it will assume there are disk-images specified
-    # in the config file bntm_config.txt.
+    # in the config file config.txt.
 
     infile = args.infile
     tm = args.tm  # Topic modeling type: gensim/graphlab
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         tm = 'gensim'
 
     if config_file == None:
-        config_file = "bntm_config.txt"
+        config_file = "config.txt"
 
     bn = BnFilextract()
     if infile == None:

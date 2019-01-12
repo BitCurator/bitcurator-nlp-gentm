@@ -30,8 +30,8 @@ $ git clone https://github.com/bitcurator/bitcurator-nlp-gentm
 $ cd bitcurator-nlp-gentm
 ```
 
-* (Optional) Update the configuration file.
-A prebuilt configuration file, "bntm_config.txt" includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
+* **Optional** - Update the configuration file.
+A prebuilt configuration file, **config.txt** includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
 
 * Run the setup shell script to install and configure the required software (various forensics tools, textract, graphlab, etc). Note that this may take some time (30 or more minutes).
 ```shell
@@ -54,7 +54,7 @@ Additional adjustments can be performed with command-line flags.
 * --tm: topic modeling tool (default gensim). (Graphlab option disabled due to licensing restrictions)
 * --infile: file source: if the --infile option is not used, the disc image(s) listed in the configuration 
 file will be extracted. Use --infile to specify a directory instead.
-* --config: configuration file (default bntm_config.txt in main directory) - specify file path for alternate configuration file
+* --config: configuration file (default **config.txt** in main directory) - specify file path for alternate configuration file
 
 ```shell
 $ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile </directory/path>] [--config </path/to/config-file/>] 

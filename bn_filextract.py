@@ -219,7 +219,7 @@ class BnFilextract:
         for root, dirs, files in os.walk(filextract_dir):
             path = root.split(os.sep)
 
-            entity_list = ent.bnParseConfigFileForEnts("bntm_config.txt")
+            entity_list = ent.bnParseConfigFileForEnts("config.txt")
 
             for filename in files:
                 file_path = '/'.join(path) + '/' + filename
