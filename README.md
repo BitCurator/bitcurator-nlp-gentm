@@ -5,7 +5,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/issues)
 [![GitHub forks](https://img.shields.io/github/forks/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/network)
 
-Generate topic models using open text automatically extracted from various file formats in disk images. This project is in development.
+Generate topic models using open text automatically extracted from various file formats in disk images. This project uses The Sleuth Kit (https://github.com/sleuthkit/sleuthkit) to parse file systems in disk images, textract (https://textract.readthedocs.io/en/stable/) to extract text from common file formats, gensim to generate topic models (https://radimrehurek.com/gensim/), and pyLDAvis (https://github.com/bmabey/pyLDAvis) for visualization.
 
 ## Building and running
 
