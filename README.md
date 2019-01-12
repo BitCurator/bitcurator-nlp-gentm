@@ -62,7 +62,7 @@ $ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile <
 
 ## Additional Notes
 
-* If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
+If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
 
 ```shell
 $ sudo apt-get update
