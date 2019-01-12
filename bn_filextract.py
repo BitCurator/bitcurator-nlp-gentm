@@ -35,10 +35,6 @@ from gensim.parsing.preprocessing import stem_text
 from gensim.parsing.preprocessing import strip_numeric
 from gensim.parsing.preprocessing import strip_punctuation
 
-# FIXME: The following is needed only for bn_plot : See how it can be 
-# selectively imported
-#import bn_plot
-
 class ewf_Img_Info(pytsk3.Img_Info):
   
     def __init__(self, ewf_handle):
