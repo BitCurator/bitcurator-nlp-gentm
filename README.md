@@ -30,12 +30,22 @@ $ git clone https://github.com/bitcurator/bitcurator-nlp-gentm
 $ cd bitcurator-nlp-gentm
 ```
 
-* **Optional** - Update the configuration file.
-A prebuilt configuration file, **config.txt** includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
-
 * Run the setup shell script to install and configure the required software (various dependencies, TSK, textract, and gensim). Note that this may take some time (**typically 10-15 minutes**).
 ```shell
 $ sudo ./setup.sh
+```
+
+## Disk Image Selection and Configuration
+
+This repository includes a sample Expert Witness Format disk image (**govdocs45sampler.E01**) in the **disk-images** directory. If you do not make any changes to the configuration file, the topic modeler and visualization tool will be run on text extracted from files discovered in this image.
+
+To run the tool against other disk images (EWF or raw), simply copy those images into the **disk-images** directory and edit the **[image_section]** of the configuration file (**config.txt**) to include the relevant files. For two images named **testimage1.E01** and **testimage2.dd**, for example, the section would appear as follows:
+
+```shell
+# Disk images to process (the default location can be changed in the following section)
+[image_section]
+my-image-name1.E01 = 1
+my-image-name2.dd = 1
 ```
 
 ## Running the Tool
