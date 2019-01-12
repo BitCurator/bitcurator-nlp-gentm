@@ -33,7 +33,7 @@ $ cd bitcurator-nlp-gentm
 * **Optional** - Update the configuration file.
 A prebuilt configuration file, **config.txt** includes a single sample image and limits text extraction to some common file types. You can process additional images by copying them into the disk images directory and adding their names to the section entitled "image-section" prior to running the tool.
 
-* Run the setup shell script to install and configure the required software (various forensics tools, textract, graphlab, etc). Note that this may take some time (30 or more minutes).
+* Run the setup shell script to install and configure the required software (various dependencies, TSK, textract, and gensim). Note that this may take some time (**typically 10-15 minutes**).
 ```shell
 $ sudo ./setup.sh
 ```
