@@ -39,7 +39,7 @@ $ sudo ./setup.sh
 
 This repository includes a sample Expert Witness Format disk image (**govdocs45sampler.E01**) in the **disk-images** directory. If you do not make any changes to the configuration file, the topic modeler and visualization tool will be run on text extracted from files discovered in this image.
 
-To run the tool against other disk images (EWF or raw), simply copy those images into the **disk-images** directory and edit the **[image_section]** of the configuration file (**config.txt**) to include the relevant files. For two images named **testimage1.E01** and **testimage2.dd**, for example, the section would appear as follows:
+To run the tool against other disk images (EWF or raw), simply copy those images into the **disk-images** directory and edit the **[image_section]** of the configuration file (**config.txt**) to include the relevant files. For example, if you had two images named **testimage1.E01** and **testimage2.dd**, the section would be modified as follows:
 
 ```shell
 # Disk images to process (the default location can be changed in the following section)
