@@ -8,8 +8,8 @@ govdocs45sampler.E01 = 1
 
 # Configuration settings. Where to find disk images and store intermediary files.
 [confset_section]
-disk_image_dir = "disk-images"
-file_staging_directory = "filextract_dir"
+disk_image_dir = "disk_images"
+file_staging_directory = "extracted_files"
 nlp_dir = "bcnlp"
 spacy_outfile = "spacy_outfile"
 entity_info = "No"

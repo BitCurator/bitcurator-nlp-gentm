@@ -154,19 +154,19 @@ class BnFilextract:
 
         return input_file_contents 
 
-    def bnTraverseInfileDir(self, filextract_dir, documents, config_file):
+    def bnTraverseInfileDir(self, extracted_files, documents, config_file):
         ''' This routine traverses the given directory to extract the
             files and adds the contents to the global documents list.
 
         Args:
-          filextract_dir: Direcotry whose files need to be extracted.
+          extracted_files: Directory whose files need to be extracted.
           documents: Where the contents of th files will go.
           config_file: Configuration file.
         '''
 
-        print("bnTraverseInfileDir: filextract_dir: ", filextract_dir)
+        print("bnTraverseInfileDir: extracted_files: ", extracted_files)
         num_docs = 0
-        for root, dirs, files in os.walk(filextract_dir):
+        for root, dirs, files in os.walk(extracted_files):
             path = root.split(os.sep)
             '''
             logging.info("traverse: path: %s, length: %s ", path, len(path))
@@ -198,21 +198,21 @@ class BnFilextract:
             logging.info("[D]traverse: Total num docs: %d", num_docs)
         return documents
 
-    def bnTraverseDirForPlot(self, img, filextract_dir, ent, parse_en, config_file):
+    def bnTraverseDirForPlot(self, img, extracted_files, ent, parse_en, config_file):
         ''' This routine traverses the given directory to extract the
             files and invokes a routine to process the text for plotting
             purposes.
 
         Args:
           img: Image index
-          filextract_dir: Direcotry whose files need to be extracted.
+          extracted_files: Directory whose files need to be extracted.
           ent: Handle to ParseForEnts class
           parse_en: Spacy handle
           config_file: Configuration file.
         '''
 
         num_docs = 0
-        for root, dirs, files in os.walk(filextract_dir):
+        for root, dirs, files in os.walk(extracted_files):
             path = root.split(os.sep)
 
             entity_list = ent.bnParseConfigFileForEnts("config.txt")

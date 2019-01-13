@@ -239,7 +239,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Infile specifies the directory of files to run the topic modeling on.
-    # If no argument specified, it will assume there are disk-images specified
+    # If no argument specified, it will assume there are disk_images specified
     # in the config file config.txt.
 
     infile = args.infile

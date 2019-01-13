@@ -291,7 +291,7 @@ if __name__ == "__main__":
     ####file_system = resolver.Resolver.OpenFileSystem(base_path_spec)
     ####file_entry = resolver.Resolver.OpenFileEntry(base_path_spec)
 
-    output_path = os.path.join(os.getcwd(), "filextract_dir" )
+    output_path = os.path.join(os.getcwd(), "extracted_files" )
     #fe = FileExtractor(base_path_spec)
     fe = FileExtractor(base_path_spec, output_path)
     file_entry = resolver.Resolver.OpenFileEntry(base_path_spec)
@@ -300,9 +300,9 @@ if __name__ == "__main__":
     bl_fle = FileEntryLister()
     base_path_spec = bl_fle.GetBasePathSpec(source_path)
 
-    output_path = os.path.join(os.getcwd(), "new_filextract_dir" )
-    file_location = os.path.join(os.getcwd(), "new_filextract_dir" )
-    #image_location = os.path.join(os.getcwd(), "disk-images")
+    output_path = os.path.join(os.getcwd(), "new_extracted_files" )
+    file_location = os.path.join(os.getcwd(), "new_extracted_files" )
+    #image_location = os.path.join(os.getcwd(), "disk_images")
     os_path_spec = path_spec_factory.Factory.NewPathSpec(definitions.TYPE_INDICATOR_OS, location=source_path)
     ewf_path_spec = path_spec_factory.Factory.NewPathSpec(definitions.TYPE_INDICATOR_EWF, parent=os_path_spec)
 
