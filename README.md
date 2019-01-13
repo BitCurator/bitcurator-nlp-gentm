@@ -56,11 +56,12 @@ Run the following command to extract text from the configured file types, start 
 $ python bcnlp_tm.py
 ```
 
+* Depending on the size of your corpus, this may take some time. You will see a range of log output and (possibly) deprecation warnings related to the operation of gensim and other tools. The tool is operating normally unless it drops back to a terminal prompt with an error.
+
 * The results based on the text extracted from your specified file types and processed using pyLDAvis will appear automatically in a browser window. When finished viewing, you can terminate the server in the existing terminal by typing "Ctrl-X" followed by "Ctrl-C".
 
-* Additional usage notes
-
 Additional adjustments can be performed with command-line flags.
+
 * --topics: number of topics (default 10)
 * --tm: topic modeling tool (default gensim). (Graphlab option disabled due to licensing restrictions)
 * --infile: file source: if the --infile option is not used, the disc image(s) listed in the configuration 
