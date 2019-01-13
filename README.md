@@ -72,15 +72,6 @@ file will be extracted. Use --infile to specify a directory instead.
 $ Usage: python bcnlp_tm.py [--topics <10>] [--tm <gensim|graphlab>] [--infile </directory/path>] [--config </path/to/config-file/>] 
 ```
 
-## Additional Notes
-
-If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
-
-```shell
-$ sudo apt-get update
-$ sudo apt-get install ubuntu-desktop
-```
-
 ## Documentation
 
 Additional project information can be found on the BitCurator NLP wiki at https://github.com/BitCurator/bitcurator-nlp/wiki.
@@ -93,3 +84,11 @@ Unless otherwise indicated, software items in this repository are distributed un
 
 In addition to software produced by the BitCurator team, BitCurator packages and modifies open source software produced by other developers. Licenses and attributions are retained here where applicable.
 
+## Additional Notes
+
+If your Ubuntu VM does not already have a desktop (graphic UI), you will need to install one in order to view the results in a browser:
+
+```shell
+$ sudo apt-get update
+$ sudo apt-get install ubuntu-desktop
+```
