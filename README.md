@@ -4,8 +4,13 @@
 
 [![GitHub issues](https://img.shields.io/github/issues/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/issues)
 [![GitHub forks](https://img.shields.io/github/forks/bitcurator/bitcurator-nlp-gentm.svg)](https://github.com/bitcurator/bitcurator-nlp-gentm/network)
-[![Build Status](https://travis-ci.org/BitCurator/bitcurator-nlp-gentm.svg?branch=master)](https://travis-ci.org/BitCurator/bitcurator-nlp-gentm)
 [![Twitter Follow](https://img.shields.io/twitter/follow/bitcurator.svg?style=social&label=Follow)](https://twitter.com/bitcurator)
+
+# END-OF-LIFE (EOL) NOTICE 
+
+This research software has reached end-of-life. The code in this repository is no longer actively maintained or supported.
+
+## About
 
 Generate topic models using open text automatically extracted from various file formats in disk images. This project uses The Sleuth Kit (https://github.com/sleuthkit/sleuthkit) to parse file systems in disk images, textract (https://textract.readthedocs.io/en/stable/) to extract text from common file formats, gensim to generate topic models (https://radimrehurek.com/gensim/), and pyLDAvis (https://github.com/bmabey/pyLDAvis) for visualization.
 
